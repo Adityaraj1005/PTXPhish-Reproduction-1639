@@ -46,3 +46,29 @@ Here are the simple steps we will follow to complete our assignment:
   Check if our accuracy numbers match what the authors wrote in their research paper.
 * **Step 5: Final Report**  
   Clean up our repository and submit our findings.
+
+---
+
+## 📑 Research Paper Breakdown (Made Simple)
+
+### 1. What is the Paper About?
+Traditional phishing steals passwords or login keys. This paper studies a new scam called **PTXPHISH (Payload-based Transaction Phishing)**. 
+Instead of stealing passwords, scammers create tricky transaction codes and get victims to sign them directly inside their crypto wallet (like MetaMask). The wallet then follows the code and gives the scammer the victim's money.
+
+### 2. The 4 Main Attack Tricks
+The authors analyzed 5,000 confirmed scams and grouped them into 4 common tricks:
+* **Ice Phishing:** Tricking users into signing an `approve` or `permit` button (like signing a blank check) under the disguise of a "free airdrop," giving the scammer full permission to steal funds later.
+* **NFT Order Abuse:** Tricking users into signing an offer that sells their expensive NFT for almost $0.
+* **Address Poisoning:** Sending fake $0 transactions to a user from a lookalike wallet address, hoping the user will accidentally copy-paste the scammer's address next time.
+* **Payable Function Abuse:** Tricking the user into clicking a button that directly sends real Ethereum coins straight into the scammer's wallet.
+
+### 3. How the Tool (PTXPhish) Catches Them
+* Standard antivirus tools only check website blacklists, which fail when scammers create fresh websites every day.
+* **PTXPhish runs a private test first:** It simulates the transaction before it is confirmed to see what actually happens.
+* It checks the money flow: If money or spending permission leaves the user's wallet and nothing fair comes back, it blocks the transaction.
+* It achieved over **99% accuracy** and inspects a whole block in just **390 ms**.
+
+### 4. What the Researchers Found in Real Life
+* The team monitored Ethereum live for **300 days**.
+* Found **130,637 scam transactions** that stole over **$341.9 million**.
+* Helped real victims by sending **2,539 warning alerts** and reporting **1,726 scammer addresses** to security blacklists.
