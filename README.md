@@ -72,3 +72,63 @@ The authors analyzed 5,000 confirmed scams and grouped them into 4 common tricks
 * The team monitored Ethereum live for **300 days**.
 * Found **130,637 scam transactions** that stole over **$341.9 million**.
 * Helped real victims by sending **2,539 warning alerts** and reporting **1,726 scammer addresses** to security blacklists.
+
+
+---
+
+## 🛠️ Project Setup & Data Engineering Pipeline
+
+This repository reproduces the research benchmark and evaluation framework introduced in the NDSS 2025 paper **PTXPhish**. Below is the end-to-end breakdown of how our environment is configured, dependencies are managed, and how the raw benchmark data was inspected and transformed into a clean training/evaluation pipeline.
+
+---
+
+### 1. Environment & Dependencies (`requirements.txt`)
+
+To ensure reproducibility across different operating systems without contaminating global system Python packages, all development is executed inside an isolated virtual environment (`venv`). 
+
+Key dependencies tracked in `requirements.txt`:
+* **`web3`**: Interfaces directly with Ethereum JSON-RPC nodes to fetch low-level transaction payloads, receipt receipts, and state execution traces.
+* **`pandas`**: High-performance data manipulation used to parse the multi-level dataset matrices and output flattened tabular structures.
+* **`openpyxl`**: Underlying engine allowing Pandas to parse modern `.xlsx` workbooks containing complex merged cells.
+* **`requests`**: Handles HTTP requests to blockchain explorers (Etherscan API) and external RPC endpoints.
+* **`matplotlib` & `seaborn`**: Generates visual representations of attack distribution frequencies, inspection latencies, and detection confusion matrices.
+
+#### Installation
+```bash
+# 1. Activate your local virtual environment:
+# On Windows PowerShell:
+.\venv\Scripts\activate
+# On Linux/macOS:
+source venv/bin/activate
+
+# 2. Install all pinned dependencies:
+pip install -r requirements.txt
+
+
+### 2. Checking the Raw Data (`scripts/eda_dataset.py`)
+* **Why we need it**: The original file (`PTXPHISH.xlsx`) has messy merged headers and 28 separate columns, making it hard to read.
+* **What it does**:
+  * Reads the top header rows to find the scam names.
+  * Counts how many transactions are in each group.
+  * Makes sure the transaction IDs are valid and not broken.
+
+---
+
+### 3. Cleaning the Data (`scripts/clean_dataset.py`)
+* **Why we need it**: Merged Excel cells leave lots of empty blank spaces. This script fixes them and makes a simple table.
+* **What it does**:
+  * Fills in missing column labels so no scam type is lost.
+  * Cleans and checks all 18,556 transaction IDs.
+  * Saves everything into a neat CSV file: `dataset/cleaned_ptxphish.csv`.
+
+---
+
+### 📊 Dataset Summary
+
+| Scam Type | Total Count | Simple Meaning |
+| :--- | :---: | :--- |
+| **Ice Phishing** | **2,569** | Tricks users into giving permission to steal tokens |
+| **NFT Order Scam** | **609** | Tricks users into giving away costly NFTs for free |
+| **Address Poisoning** | **226** | Sends fake 0-value transfers from lookalike addresses |
+| **Payable Function Scam** | **15,152** | Tricks users into sending real ETH directly to the scammer |
+| **Total Valid Transactions** | **18,556** | Clean data ready for building detection rules |
