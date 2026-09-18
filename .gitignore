@@ -1,0 +1,5 @@
+venv/
+PTXPhish-Reproduction-1639/
+__pycache__/
+*.pyc
+.vscode/
