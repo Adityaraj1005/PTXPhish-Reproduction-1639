@@ -132,3 +132,13 @@ pip install -r requirements.txt
 | **Address Poisoning** | **226** | Sends fake 0-value transfers from lookalike addresses |
 | **Payable Function Scam** | **15,152** | Tricks users into sending real ETH directly to the scammer |
 | **Total Valid Transactions** | **18,556** | Clean data ready for building detection rules |
+
+
+---
+
+### 4. Blockchain Connection & Verification (`scripts/test_rpc.py`)
+* **Purpose**: Tests our direct link to the Ethereum network and proves we can pull real scam records using IDs from our cleaned dataset.
+* **What it does**:
+  * Uses a list of free public Ethereum nodes (with automatic fallback) to prevent rate-limiting or crashes.
+  * Grabs a sample Ice Phishing transaction ID from `cleaned_ptxphish.csv`.
+  * Queries the blockchain to retrieve live details: the victim wallet, the target contract, value sent, and the function bytecode.
