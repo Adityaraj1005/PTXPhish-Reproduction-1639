@@ -118,7 +118,7 @@ source venv/bin/activate
 
 # 2. Install all pinned dependencies:
 pip install -r requirements.txt
-
+```
 
 ### 2. Checking the Raw Data (`scripts/eda_dataset.py`)
 * **Why we need it**: The original file (`PTXPHISH.xlsx`) has messy merged headers and 28 separate columns, making it hard to read.
@@ -137,6 +137,13 @@ pip install -r requirements.txt
   * Saves everything into a neat CSV file: `dataset/cleaned_ptxphish.csv`.
 
   ---
+
+  ### 4. Blockchain Connection & Verification (`scripts/test_rpc.py`)
+* **Purpose**: Tests our direct link to the Ethereum network and proves we can pull real scam records using IDs from our cleaned dataset.
+* **What it does**:
+  * Uses a list of free public Ethereum nodes (with automatic fallback) to prevent rate-limiting or crashes.
+  * Grabs a sample Ice Phishing transaction ID from `cleaned_ptxphish.csv`.
+  * Queries the blockchain to retrieve live details: the victim wallet, the target contract, value sent, and the function bytecode.
 
 ### 5. Detection Rule 1: Ice Phishing Detector (`scripts/detect_ice_phishing.py`)
 
@@ -159,9 +166,3 @@ Unlike traditional scams that demand an immediate cryptocurrency transfer, Ice P
 
 
 
-### 4. Blockchain Connection & Verification (`scripts/test_rpc.py`)
-* **Purpose**: Tests our direct link to the Ethereum network and proves we can pull real scam records using IDs from our cleaned dataset.
-* **What it does**:
-  * Uses a list of free public Ethereum nodes (with automatic fallback) to prevent rate-limiting or crashes.
-  * Grabs a sample Ice Phishing transaction ID from `cleaned_ptxphish.csv`.
-  * Queries the blockchain to retrieve live details: the victim wallet, the target contract, value sent, and the function bytecode.
