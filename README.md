@@ -76,6 +76,21 @@ The authors analyzed 5,000 confirmed scams and grouped them into 4 common tricks
 
 ---
 
+
+### 📊 Dataset Summary
+
+| Scam Type | Total Count | Simple Meaning |
+| :--- | :---: | :--- |
+| **Ice Phishing** | **2,569** | Tricks users into giving permission to steal tokens |
+| **NFT Order Scam** | **609** | Tricks users into giving away costly NFTs for free |
+| **Address Poisoning** | **226** | Sends fake 0-value transfers from lookalike addresses |
+| **Payable Function Scam** | **15,152** | Tricks users into sending real ETH directly to the scammer |
+| **Total Valid Transactions** | **18,556** | Clean data ready for building detection rules |
+
+
+---
+
+
 ## 🛠️ Project Setup & Data Engineering Pipeline
 
 This repository reproduces the research benchmark and evaluation framework introduced in the NDSS 2025 paper **PTXPhish**. Below is the end-to-end breakdown of how our environment is configured, dependencies are managed, and how the raw benchmark data was inspected and transformed into a clean training/evaluation pipeline.
@@ -121,20 +136,28 @@ pip install -r requirements.txt
   * Cleans and checks all 18,556 transaction IDs.
   * Saves everything into a neat CSV file: `dataset/cleaned_ptxphish.csv`.
 
+  ---
+
+### 5. Detection Rule 1: Ice Phishing Detector (`scripts/detect_ice_phishing.py`)
+
+#### What is Ice Phishing?
+Unlike traditional scams that demand an immediate cryptocurrency transfer, Ice Phishing deceives users into signing permission approvals (such as `approve` or `setApprovalForAll`). The victim's funds remain in their wallet initially, but the granted allowance enables the attacker to call `transferFrom` later to drain the victim's tokens without additional interaction.
+
+#### What This Script Does:
+* Connects to the Ethereum mainnet using public RPC nodes with automatic fallback.
+* Pulls real Ice Phishing transaction hashes from `cleaned_ptxphish.csv`.
+* Extracts the 4-byte function selector (the first 10 hex characters of the transaction `input` payload).
+* Compares the selector against signatures commonly associated with token allowances and unauthorized asset draining:
+  * `0x095ea7b3`: `approve(address,uint256)`
+  * `0xa22cb465`: `setApprovalForAll(address,bool)`
+  * `0xd505accf`: `permit(...)`
+  * `0x23b872dd`: `transferFrom(address,address,uint256)`
+  * `0xcaa5c23f`: `multicall(tuple[])`
+* Successfully flags transactions invoking these methods as suspected Ice Phishing attacks.
+
 ---
 
-### 📊 Dataset Summary
 
-| Scam Type | Total Count | Simple Meaning |
-| :--- | :---: | :--- |
-| **Ice Phishing** | **2,569** | Tricks users into giving permission to steal tokens |
-| **NFT Order Scam** | **609** | Tricks users into giving away costly NFTs for free |
-| **Address Poisoning** | **226** | Sends fake 0-value transfers from lookalike addresses |
-| **Payable Function Scam** | **15,152** | Tricks users into sending real ETH directly to the scammer |
-| **Total Valid Transactions** | **18,556** | Clean data ready for building detection rules |
-
-
----
 
 ### 4. Blockchain Connection & Verification (`scripts/test_rpc.py`)
 * **Purpose**: Tests our direct link to the Ethereum network and proves we can pull real scam records using IDs from our cleaned dataset.
