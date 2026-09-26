@@ -164,5 +164,24 @@ Unlike traditional scams that demand an immediate cryptocurrency transfer, Ice P
 
 ---
 
+---
+
+### 6. Detection Rule 2: Payable Function Abuse Detector (`scripts/detect_payable_abuse.py`) 🛡️💸
+
+#### What is Payable Function Abuse? 🤔
+In Ethereum smart contracts, functions declared as `payable` can accept direct native cryptocurrency (ETH) transfers. Unlike Ice Phishing (where token permissions are drained at 0 ETH), Payable Function scams trick victims into sending massive amounts of raw ETH directly into a malicious contract under the guise of fake token mints, reward claims, or exclusive airdrops.
+
+#### Key Contrast with Ice Phishing ⚖️:
+* **Ice Phishing**: `Value = 0 ETH`. Exploits token allowances (`approve`, `transferFrom`).
+* **Payable Function Abuse**: `Value > 0 ETH` (often tens to hundreds of ETH). Direct drain of native assets via custom contract invocations.
+
+#### What This Script Does ⚙️:
+* Connects directly to Ethereum Mainnet using fallback RPC nodes (`publicnode.com`, `payload.de`, `llamarpc.com`).
+* Extracts ground-truth payable scam transaction hashes from `cleaned_ptxphish.csv`.
+* Queries live blockchain state to inspect:
+  * Native value transferred (`tx['value']` converted from Wei to Ether).
+  * 4-byte method selector identifying the entry point (e.g., custom selector `0x3158952e`).
+* Automatically flags transactions transferring non-zero ETH to contract invocations as **🚨 FLAGGED AS PAYABLE ABUSE**.
+
 
 
