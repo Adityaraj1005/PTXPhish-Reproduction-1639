@@ -185,3 +185,30 @@ In Ethereum smart contracts, functions declared as `payable` can accept direct n
 
 
 
+---
+
+## 📌 Project Roadmap & Progress Checklist 🚀
+
+Track the reproduction pipeline for the PTXPhish paper:
+
+### Phase 1: Setup & Ground Truth Data Preparation
+- [x] Environment configured (`web3.py`, `pandas`, virtual environment)
+- [x] Ground-truth dataset extracted and cleaned into `dataset/cleaned_ptxphish.csv`
+- [x] Direct Ethereum RPC connection established with multi-node fallback (`scripts/test_rpc.py`)
+
+### Phase 2: Detection Rules Implementation (The Core 4 Rules)
+- [x] **Rule 1: Ice Phishing Detector** (`scripts/detect_ice_phishing.py`)
+  - Detects `approve`, `setApprovalForAll`, `transferFrom`, and multicall token drainers (0 ETH value).
+- [x] **Rule 2: Payable Function Abuse Detector** (`scripts/detect_payable_abuse.py`)
+  - Detects direct ETH-draining trap functions (`mint`, `claim`, custom payable calls with non-zero ETH).
+- [ ] **Rule 3: Address Poisoning Detector** (`scripts/detect_address_poisoning.py`)
+  - Detects zero-value transfers sent from lookalike vanity addresses created to fool transaction history copy-pasters.
+- [ ] **Rule 4: NFT Order / Signature Phishing Detector** (`scripts/detect_nft_order_scam.py`)
+  - Detects off-chain signature abuse (e.g., Permit2 or fake SeaPort/marketplace orders).
+
+### Phase 3: Evaluation, Batch Pipeline & Academic Metrics
+- [ ] Build unified evaluation runner (`scripts/run_evaluation.py`) across all scam categories in `cleaned_ptxphish.csv`.
+- [ ] Calculate paper metrics: **Accuracy, Precision, Recall, and F1-Score**.
+- [ ] Generate comparative breakdown table matching the PTXPhish paper findings.
+- [ ] Final project presentation & documentation polish for 15-mark evaluation.
+
