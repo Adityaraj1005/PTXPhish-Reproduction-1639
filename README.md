@@ -187,6 +187,19 @@ In Ethereum smart contracts, functions declared as `payable` can accept direct n
 
 ---
 
+---
+
+### 7. Detection Rule 3: Address Poisoning Detector (`scripts/detect_address_poisoning.py`)
+
+#### What is Address Poisoning? (Simple Explanation)
+People often copy wallet addresses from their recent transaction history instead of typing 42 characters. Scammers exploit this by creating a lookalike fake address that shares the same first few and last few characters as a friend or exchange. The scammer then sends an unsolicited transfer of $0$ ETH or worthless spam tokens into the victim's wallet. The victim loses no money during this transaction, but the scammer's lookalike address is now planted at the top of the victim's transaction history, waiting for them to copy-paste it by mistake later.
+
+#### How We Detect It:
+1. **Zero Native Cost**: We verify that no actual ETH was sent (`tx['value'] == 0`).
+2. **Transfer Invocations**: We check if the transaction executes a token transfer (`0xa9059cbb` for `transfer` or `0x23b872dd` for `transferFrom`).
+3. **Unsolicited Seed**: Because legitimate user purchases or swaps transfer real native value or interact with known DEX protocols, an unsolicited token broadcast sending zero native ETH to plant an address is flagged as:
+   **🚨 FLAGGED AS ADDRESS POISONING**.
+
 ## 📌 Project Roadmap & Progress Checklist 🚀
 
 Track the reproduction pipeline for the PTXPhish paper:
@@ -201,7 +214,7 @@ Track the reproduction pipeline for the PTXPhish paper:
   - Detects `approve`, `setApprovalForAll`, `transferFrom`, and multicall token drainers (0 ETH value).
 - [x] **Rule 2: Payable Function Abuse Detector** (`scripts/detect_payable_abuse.py`)
   - Detects direct ETH-draining trap functions (`mint`, `claim`, custom payable calls with non-zero ETH).
-- [ ] **Rule 3: Address Poisoning Detector** (`scripts/detect_address_poisoning.py`)
+- [x] **Rule 3: Address Poisoning Detector** (`scripts/detect_address_poisoning.py`)
   - Detects zero-value transfers sent from lookalike vanity addresses created to fool transaction history copy-pasters.
 - [ ] **Rule 4: NFT Order / Signature Phishing Detector** (`scripts/detect_nft_order_scam.py`)
   - Detects off-chain signature abuse (e.g., Permit2 or fake SeaPort/marketplace orders).
