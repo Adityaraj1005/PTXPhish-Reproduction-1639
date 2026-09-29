@@ -200,6 +200,30 @@ People often copy wallet addresses from their recent transaction history instead
 3. **Unsolicited Seed**: Because legitimate user purchases or swaps transfer real native value or interact with known DEX protocols, an unsolicited token broadcast sending zero native ETH to plant an address is flagged as:
    **🚨 FLAGGED AS ADDRESS POISONING**.
 
+
+   ---
+
+### 8. Detection Rule 4: NFT Order Scam Detector (`scripts/detect_nft_order_scam.py`)
+
+#### What is an NFT Order / Signature Scam?
+Marketplaces like OpenSea allow users to sign off-chain digital signatures (EIP-712 messages) to list items without paying gas. Scammers trick users into signing authorization payloads that grant the scammer permission to fulfill the order for $0$ ETH. The scammer then routes this signed order directly to marketplace contracts (such as Seaport) or custom execution contracts, transferring the victim's NFT for zero payment.
+
+#### How We Detect It:
+1. **Marketplace Fulfillment Signatures**: The script identifies functions executing signed orders, such as `fulfillBasicOrder` (`0xfb0f3ee1`), `fulfillOrder` (`0xb3a34c4c`), or custom routing contracts (e.g., `0x32389b71`).
+2. **Zero Native Payment**: It verifies that native ETH sent with the fulfillment transaction is zero (`tx['value'] == 0`), confirming that assets were extracted without paying native compensation.
+3. Transactions matching these criteria are labeled:
+   **🚨 FLAGGED AS NFT ORDER SCAM**.
+
+---
+
+### 9. Technical Reference & Key Terminology
+
+* **Function Selector**: The 4-byte (8 hexadecimal characters) identifier at the beginning of transaction input data. Ethereum computes it as the first 4 bytes of `Keccak-256("functionName(type1,type2)")`. It instructs the smart contract which specific function to execute (e.g., `0xa9059cbb` for `transfer`).
+* **Calldata (`tx['input']`)**: The raw byte array sent to an address containing the function selector and ABI-encoded arguments.
+* **EIP-712**: An Ethereum standard for hashing and signing structured, human-readable data off-chain rather than signing opaque byte strings.
+* **Vanity Address**: A cryptocurrency address deliberately generated to display specific readable characters at its start or end (used in address poisoning to mimic familiar wallets).
+* **Dust Transfer**: A negligible transfer amount (such as microscopic fractions of a token or $0$ units) broadcasted solely to create an entry in a target account's transaction history.
+
 ## 📌 Project Roadmap & Progress Checklist 🚀
 
 Track the reproduction pipeline for the PTXPhish paper:
@@ -216,7 +240,7 @@ Track the reproduction pipeline for the PTXPhish paper:
   - Detects direct ETH-draining trap functions (`mint`, `claim`, custom payable calls with non-zero ETH).
 - [x] **Rule 3: Address Poisoning Detector** (`scripts/detect_address_poisoning.py`)
   - Detects zero-value transfers sent from lookalike vanity addresses created to fool transaction history copy-pasters.
-- [ ] **Rule 4: NFT Order / Signature Phishing Detector** (`scripts/detect_nft_order_scam.py`)
+- [x] **Rule 4: NFT Order / Signature Phishing Detector** (`scripts/detect_nft_order_scam.py`)
   - Detects off-chain signature abuse (e.g., Permit2 or fake SeaPort/marketplace orders).
 
 ### Phase 3: Evaluation, Batch Pipeline & Academic Metrics
