@@ -284,6 +284,27 @@ To evaluate classification performance rigorously, quantitative evaluation metri
 * **Classification Summary**: `results/classification_report.csv`
 * **Confusion Matrix Visualization**: `results/confusion_matrix.png`
 
+---
+
+### 12. Phase 5: Empirical Comparison with Original PTXPhish Benchmark
+
+#### Dataset Characteristics (NDSS 2024 Benchmark)
+The underlying benchmark dataset (`dataset/cleaned_ptxphish.csv`) contains **18,556** verified real-world Ethereum phishing transactions:
+* **Payable Function Scams**: 15,152 (81.65%)
+* **Ice Phishing Scams**: 2,569 (13.84%)
+* **NFT Order Scams**: 609 (3.28%)
+* **Address Poisoning Scams**: 226 (1.22%)
+
+#### Architectural Comparison
+
+| Dimension | Original PTXPhish Study | Our Reproduction Pipeline (`1639`) |
+| :--- | :--- | :--- |
+| **Detection Methodology** | Deterministic heuristics + EVM state replay simulation | Deterministic 4-tier decision cascade via calldata signatures |
+| **Node Infrastructure** | Dedicated local Archive Geth/Erigon node (~2 TB storage) | Multi-node archive RPC pool with dynamic failover |
+| **Evaluation Scope** | In-the-wild dataset evaluation (18,556 entries) | Stratified balanced evaluation ($N=100$, 25/class, `random_state=42`) |
+| **Primary Metric** | Macro F1 ~0.94–0.96 | Macro F1 **0.92**, Accuracy **92.00%** |
+| **Runtime Overhead** | High (full EVM state reconstruction per tx) | Lightweight (single RPC query per tx with in-memory calldata inspection) |
+
 
 ## 📌 Project Roadmap & Progress Checklist 🚀
 
@@ -307,6 +328,6 @@ Track the reproduction pipeline for the PTXPhish paper:
 ### Phase 3: Evaluation, Batch Pipeline & Academic Metrics
 - [x] Build unified evaluation runner (`scripts/run_evaluation.py`) across all scam categories in `cleaned_ptxphish.csv`.
 - [x] Calculate paper metrics: **Accuracy, Precision, Recall, and F1-Score**.
-- [ ] Generate comparative breakdown table matching the PTXPhish paper findings.
+- [x] Generate comparative breakdown table matching the PTXPhish paper findings.
 - [ ] Final project presentation & documentation polish for 15-mark evaluation.
 
