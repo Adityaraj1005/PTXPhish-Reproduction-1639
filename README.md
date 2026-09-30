@@ -243,46 +243,56 @@ Rather than executing four isolated detector scripts—which would generate redu
 
 ---
 
-#### Evaluation Results & Progression
+#### Evaluation Results & Progression 📊📈
 
-| Benchmark Metric | Phase 3a: Pilot Validation | Phase 3b: Formal Benchmark |
-| :--- | :--- | :--- |
-| **Dataset Source** | `cleaned_ptxphish.csv` (head sample) | `cleaned_ptxphish.csv` (random split) |
-| **Sampling Strategy** | 5 samples / category | 25 samples / category (`random_state=42`) |
-| **Total Transactions ($N$)** | 20 | 100 |
-| **Correct Predictions** | 20 / 20 | 92 / 100 |
-| **Overall Accuracy** | **100.00%** | **92.00%** |
-| **Artifact Output** | `results/batch_evaluation_sample.csv` | `results/large_evaluation_benchmark_100.csv` |
-
-#### Category Breakdown on 100-Sample Benchmark
-* **NFT Order Scam**: 25 / 25 (**100.00%**)
-* **Address Poisoning Scam**: 24 / 25 (**96.00%**)
-* **Ice Phishing Scam**: 22 / 25 (**88.00%**)
-* **Payable Function Scam**: 21 / 25 (**84.00%**)
-
-The 8-sample variance across the 100-transaction run reflects realistic edge cases in real-world blockchain data, including proxy delegators, custom unverified drainer wrappers, and multi-protocol aggregators.
+| Benchmark Metric | Phase 3a: Pilot Validation 🧪 | Phase 3b: Formal Benchmark 🎯 | Phase 3c: Large-Scale Benchmark 🚀 |
+| :--- | :--- | :--- | :--- |
+| **Dataset Source** | `cleaned_ptxphish.csv` (head sample) 📂 | `cleaned_ptxphish.csv` (stratified) 📂 | `cleaned_ptxphish.csv` (stratified) 📂 |
+| **Sampling Strategy** | 5 samples / category 🎲 | 25 samples / category (`seed=42`) 🎲 | 125 samples / category (`seed=42`) 🎲 |
+| **Total Transactions ($N$)** | 20 📦 | 100 📦 | 500 📦 |
+| **Correct Predictions** | 20 / 20 🎯 | 92 / 100 🎯 | 443 / 500 🎯 |
+| **Overall Accuracy** | **100.00%** 🏆 | **92.00%** 🏆 | **88.60%** 🏆 |
+| **Macro F1-Score** | 1.00 ⚖️ | 0.92 ⚖️ | 0.89 ⚖️ |
+| **Artifact Output** | `results/batch_evaluation_sample.csv` 💾 | `results/large_evaluation_benchmark_100.csv` 💾 | `results/large_evaluation_benchmark_500.csv` 💾 |
 
 ---
 
-### 11. Phase 4: Statistical Metrics & Confusion Matrix Analysis (`scripts/generate_metrics.py`)
+#### Category Breakdown on 500-Sample Benchmark ($N=500$, 125/class) 🔍🛡️
+* **NFT Order Scam**: **124 / 125** (**99.20%** accuracy \| **0.99** F1) 🎨⚡
+* **Address Poisoning Scam**: **122 / 125** (**97.60%** accuracy \| **0.96** F1) ☠️📬
+* **Payable Function Scam**: **101 / 125** (**80.80%** accuracy \| **0.79** F1) 💸🚪
+* **Ice Phishing Scam**: **96 / 125** (**76.80%** accuracy \| **0.81** F1) 🧊🎣
 
-To evaluate classification performance rigorously, quantitative evaluation metrics were computed over the balanced 100-sample test benchmark ($N=100$, 25 samples per class, `random_state=42`).
+The 57 misclassified instances out of 500 transactions ($11.40\%$ error margin) reflect authentic blockchain edge cases, including complex proxy aggregators, Permit2 multicall batch sweeps, and custom unverified drainer wrappers.
 
-#### Quantitative Evaluation Metrics ($N=100$)
+---
+
+---
+
+### 11. Phase 4: Large-Scale Quantitative Benchmark ($N=500$)
+
+To stress-test the deterministic cascade against a broader set of smart contract architectures, the evaluation was scaled $5\times$ to a balanced 500-sample benchmark ($N=500$, 125 samples per class, `random_state=42`).
+
+#### Large-Scale Quantitative Metrics ($N=500$)
 
 | Attack Vector Class | Precision | Recall | F1-Score | Support |
 | :--- | :---: | :---: | :---: | :---: |
-| **NFT Order Scam** | **1.00** | **1.00** | **1.00** | 25 |
-| **Address Poisoning Scam** | **0.96** | **0.96** | **0.96** | 25 |
-| **Ice Phishing Scam** | **0.85** | **0.88** | **0.86** | 25 |
-| **Payable Function Scam** | **0.88** | **0.84** | **0.86** | 25 |
-| **Overall Accuracy** | — | — | **0.92** | 100 |
-| **Macro Average** | **0.92** | **0.92** | **0.92** | 100 |
-| **Weighted Average** | **0.92** | **0.92** | **0.92** | 100 |
+| **NFT Order Scam** | **0.99** | **0.99** | **0.99** | 125 |
+| **Address Poisoning Scam** | **0.95** | **0.98** | **0.96** | 125 |
+| **Ice Phishing Scam** | **0.85** | **0.77** | **0.81** | 125 |
+| **Payable Function Scam** | **0.77** | **0.81** | **0.79** | 125 |
+| **Overall Accuracy** | — | — | **0.8860 (88.60%)** | 500 |
+| **Macro Average** | **0.89** | **0.89** | **0.89** | 500 |
+| **Weighted Average** | **0.89** | **0.89** | **0.89** | 500 |
 
-#### Artifacts Generated
-* **Classification Summary**: `results/classification_report.csv`
-* **Confusion Matrix Visualization**: `results/confusion_matrix.png`
+#### Empirical Observations Across Scales ($N=100 \rightarrow N=500$)
+* **Heuristic Stability**: NFT Order and Address Poisoning detectors retained near-perfect identification ($\ge 0.96$ F1) across the wider transaction pool.
+* **Cross-Class Overlap in Real Data**: The minor drop in Ice Phishing recall ($0.88 \rightarrow 0.77$) and Payable precision ($0.88 \rightarrow 0.77$) stems from hybrid drainers that route batch token approvals through multicall routers or custom unverified proxy contracts.
+
+#### Saved Visualizations & Metrics
+* `results/large_evaluation_benchmark_500.csv`
+* `results/classification_report_500.csv`
+* `results/confusion_matrix_500.png`
 
 ---
 
