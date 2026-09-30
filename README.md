@@ -300,7 +300,7 @@ To stress-test the deterministic cascade against a broader set of smart contract
 
 ### 12. Phase 5: Empirical Comparison with Original PTXPhish Benchmark 🔬⚖️
 
-#### Dataset Characteristics (NDSS 2024 Benchmark) 📂
+#### Dataset Characteristics (NDSS 2025 Benchmark) 📂
 The underlying benchmark dataset (`dataset/cleaned_ptxphish.csv`) contains **18,556** verified real-world Ethereum phishing transactions:
 * **Payable Function Scams**: 15,152 (81.65%) 💸
 * **Ice Phishing Scams**: 2,569 (13.84%) 🧊
