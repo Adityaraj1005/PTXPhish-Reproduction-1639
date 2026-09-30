@@ -224,6 +224,23 @@ Marketplaces like OpenSea allow users to sign off-chain digital signatures (EIP-
 * **Vanity Address**: A cryptocurrency address deliberately generated to display specific readable characters at its start or end (used in address poisoning to mimic familiar wallets).
 * **Dust Transfer**: A negligible transfer amount (such as microscopic fractions of a token or $0$ units) broadcasted solely to create an entry in a target account's transaction history.
 
+---
+
+### 10. Phase 3: Unified Evaluation Pipeline (`scripts/run_evaluation.py`)
+
+#### Pipeline Overview:
+The unified evaluation runner integrates all four detection heuristics into an automated decision engine:
+1. **NFT Order Phishing**: Identifies off-chain marketplace order fulfillments (e.g., Seaport selectors, Permit2) executed with zero native ETH consideration.
+2. **Ice Phishing**: Detects asset approvals (`approve`, `setApprovalForAll`, `permit`), direct spender drains (`transferFrom`), and multicall-wrapped batch drain sweeps (`0xcaa5c23f`).
+3. **Address Poisoning**: Flags unsolicited zero-ETH direct token transfers (`transfer`) designed to inject lookalike addresses into transaction histories.
+4. **Payable Function Abuse**: Detects transactions sending native ETH (`tx['value'] > 0`) to trap mint/claim methods.
+
+#### Validation Results:
+* **Batch Size**: 20 transactions (5 balanced samples per attack class)
+* **Correct Predictions**: 20 / 20
+* **Validation Accuracy**: 100.00%
+* **Results Artifact**: Stored in `results/batch_evaluation_sample.csv`
+
 ## 📌 Project Roadmap & Progress Checklist 🚀
 
 Track the reproduction pipeline for the PTXPhish paper:
@@ -244,7 +261,7 @@ Track the reproduction pipeline for the PTXPhish paper:
   - Detects off-chain signature abuse (e.g., Permit2 or fake SeaPort/marketplace orders).
 
 ### Phase 3: Evaluation, Batch Pipeline & Academic Metrics
-- [ ] Build unified evaluation runner (`scripts/run_evaluation.py`) across all scam categories in `cleaned_ptxphish.csv`.
+- [x] Build unified evaluation runner (`scripts/run_evaluation.py`) across all scam categories in `cleaned_ptxphish.csv`.
 - [ ] Calculate paper metrics: **Accuracy, Precision, Recall, and F1-Score**.
 - [ ] Generate comparative breakdown table matching the PTXPhish paper findings.
 - [ ] Final project presentation & documentation polish for 15-mark evaluation.
