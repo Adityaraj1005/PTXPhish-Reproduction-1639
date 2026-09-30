@@ -311,7 +311,7 @@ The underlying benchmark dataset (`dataset/cleaned_ptxphish.csv`) contains **18,
 
 #### Architectural & Performance Comparison 🏛️⚡
 
-| Dimension 📐 | Original PTXPhish Study (NDSS 2024) 🏛️ | Our Reproduction Pipeline (Phase 3b: $N=100$) 🎯 | Our Scaled Benchmark (Phase 3c: $N=500$) 🚀 |
+| Dimension 📐 | Original PTXPhish Study (NDSS 2025) 🏛️ | Our Reproduction Pipeline (Phase 3b: $N=100$) 🎯 | Our Scaled Benchmark (Phase 3c: $N=500$) 🚀 |
 | :--- | :--- | :--- | :--- |
 | **Detection Methodology** | Deterministic heuristics + EVM state replay simulation ⚙️ | Deterministic 4-tier decision cascade via calldata selectors 🌲 | Deterministic 4-tier decision cascade via calldata selectors 🌲 |
 | **Node Infrastructure** | Dedicated local Archive Geth/Erigon node (~2 TB storage) 🖧💾 | Multi-node archive RPC pool with dynamic failover 🌐🔄 | Multi-node archive RPC pool with dynamic failover 🌐🔄 |
