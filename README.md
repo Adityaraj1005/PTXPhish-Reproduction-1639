@@ -262,6 +262,29 @@ Rather than executing four isolated detector scripts—which would generate redu
 
 The 8-sample variance across the 100-transaction run reflects realistic edge cases in real-world blockchain data, including proxy delegators, custom unverified drainer wrappers, and multi-protocol aggregators.
 
+---
+
+### 11. Phase 4: Statistical Metrics & Confusion Matrix Analysis (`scripts/generate_metrics.py`)
+
+To evaluate classification performance rigorously, quantitative evaluation metrics were computed over the balanced 100-sample test benchmark ($N=100$, 25 samples per class, `random_state=42`).
+
+#### Quantitative Evaluation Metrics ($N=100$)
+
+| Attack Vector Class | Precision | Recall | F1-Score | Support |
+| :--- | :---: | :---: | :---: | :---: |
+| **NFT Order Scam** | **1.00** | **1.00** | **1.00** | 25 |
+| **Address Poisoning Scam** | **0.96** | **0.96** | **0.96** | 25 |
+| **Ice Phishing Scam** | **0.85** | **0.88** | **0.86** | 25 |
+| **Payable Function Scam** | **0.88** | **0.84** | **0.86** | 25 |
+| **Overall Accuracy** | — | — | **0.92** | 100 |
+| **Macro Average** | **0.92** | **0.92** | **0.92** | 100 |
+| **Weighted Average** | **0.92** | **0.92** | **0.92** | 100 |
+
+#### Artifacts Generated
+* **Classification Summary**: `results/classification_report.csv`
+* **Confusion Matrix Visualization**: `results/confusion_matrix.png`
+
+
 ## 📌 Project Roadmap & Progress Checklist 🚀
 
 Track the reproduction pipeline for the PTXPhish paper:
@@ -283,7 +306,7 @@ Track the reproduction pipeline for the PTXPhish paper:
 
 ### Phase 3: Evaluation, Batch Pipeline & Academic Metrics
 - [x] Build unified evaluation runner (`scripts/run_evaluation.py`) across all scam categories in `cleaned_ptxphish.csv`.
-- [ ] Calculate paper metrics: **Accuracy, Precision, Recall, and F1-Score**.
+- [x] Calculate paper metrics: **Accuracy, Precision, Recall, and F1-Score**.
 - [ ] Generate comparative breakdown table matching the PTXPhish paper findings.
 - [ ] Final project presentation & documentation polish for 15-mark evaluation.
 
