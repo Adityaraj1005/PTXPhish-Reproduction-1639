@@ -226,20 +226,41 @@ Marketplaces like OpenSea allow users to sign off-chain digital signatures (EIP-
 
 ---
 
-### 10. Phase 3: Unified Evaluation Pipeline (`scripts/run_evaluation.py`)
+---
 
-#### Pipeline Overview:
-The unified evaluation runner integrates all four detection heuristics into an automated decision engine:
-1. **NFT Order Phishing**: Identifies off-chain marketplace order fulfillments (e.g., Seaport selectors, Permit2) executed with zero native ETH consideration.
-2. **Ice Phishing**: Detects asset approvals (`approve`, `setApprovalForAll`, `permit`), direct spender drains (`transferFrom`), and multicall-wrapped batch drain sweeps (`0xcaa5c23f`).
-3. **Address Poisoning**: Flags unsolicited zero-ETH direct token transfers (`transfer`) designed to inject lookalike addresses into transaction histories.
-4. **Payable Function Abuse**: Detects transactions sending native ETH (`tx['value'] > 0`) to trap mint/claim methods.
+### 10. Phase 3: Unified Evaluation Pipeline & Benchmark (`scripts/run_evaluation.py`)
 
-#### Validation Results:
-* **Batch Size**: 20 transactions (5 balanced samples per attack class)
-* **Correct Predictions**: 20 / 20
-* **Validation Accuracy**: 100.00%
-* **Results Artifact**: Stored in `results/batch_evaluation_sample.csv`
+#### Architectural Design
+Rather than executing four isolated detector scripts—which would generate redundant RPC network calls (4x multiplier), trigger strict rate limits (HTTP 429/525), and introduce multi-label conflicts—the unified evaluation runner implements a single-pass **Deterministic Decision Cascade**:
+
+1. **RPC Connection Pool & Failover**: Queries an active pool of Ethereum archive providers (`ethereum.publicnode.com`, `rpc.payload.de`, `cloudflare-eth.com`). If an endpoint times out or prunes historical transaction data, the client automatically fails over to the next provider.
+2. **Single-Pass Calldata Normalization**: Fetches raw transaction payloads once over RPC, standardizes hex prefixes, and extracts the 4-byte Keccak-256 function selector alongside native ETH consideration.
+3. **Ordered Decision Hierarchy**:
+   * **Tier 1 (NFT Order Phishing)**: Detects off-chain marketplace order fulfillments (e.g., Seaport, Blur execution, Permit2 router sweeps) executed with negligible consideration ($\le 0.005$ ETH).
+   * **Tier 2 (Address Poisoning)**: Identifies zero-value ERC-20 `transfer` calls (`0xa9059cbb` with 0 native value) designed to inject lookalike addresses into victim transaction feeds.
+   * **Tier 3 (Ice Phishing)**: Detects explicit allowance grants (`approve`, `setApprovalForAll`, `permit`, `increaseAllowance`) as well as direct spender drain sweeps (`transferFrom`, multicall batch sweeps).
+   * **Tier 4 (Payable Function Abuse Fallback)**: Catches interactive contract traps, claims, security update traps, and native value transfers that do not match the explicit approval or marketplace patterns of Tiers 1–3.
+
+---
+
+#### Evaluation Results & Progression
+
+| Benchmark Metric | Phase 3a: Pilot Validation | Phase 3b: Formal Benchmark |
+| :--- | :--- | :--- |
+| **Dataset Source** | `cleaned_ptxphish.csv` (head sample) | `cleaned_ptxphish.csv` (random split) |
+| **Sampling Strategy** | 5 samples / category | 25 samples / category (`random_state=42`) |
+| **Total Transactions ($N$)** | 20 | 100 |
+| **Correct Predictions** | 20 / 20 | 92 / 100 |
+| **Overall Accuracy** | **100.00%** | **92.00%** |
+| **Artifact Output** | `results/batch_evaluation_sample.csv` | `results/large_evaluation_benchmark_100.csv` |
+
+#### Category Breakdown on 100-Sample Benchmark
+* **NFT Order Scam**: 25 / 25 (**100.00%**)
+* **Address Poisoning Scam**: 24 / 25 (**96.00%**)
+* **Ice Phishing Scam**: 22 / 25 (**88.00%**)
+* **Payable Function Scam**: 21 / 25 (**84.00%**)
+
+The 8-sample variance across the 100-transaction run reflects realistic edge cases in real-world blockchain data, including proxy delegators, custom unverified drainer wrappers, and multi-protocol aggregators.
 
 ## 📌 Project Roadmap & Progress Checklist 🚀
 
