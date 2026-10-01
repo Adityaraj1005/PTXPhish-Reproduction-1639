@@ -327,6 +327,27 @@ The underlying benchmark dataset (`dataset/cleaned_ptxphish.csv`) contains **18,
 1. **Heuristic Robustness Across Scales**: The deterministic heuristics for **NFT Order Scams ($0.99$ F1)** and **Address Poisoning ($0.96$ F1)** remained invariant when scaling from 100 to 500 samples.
 2. **Trade-Off of Zero-Simulation Calldata Parsing**: While the original paper achieved $>0.99$ F1 by executing deep EVM state replays inside a private 2 TB archive node, our reproduction achieved an **$88.60\%$ balanced accuracy and $0.89$ Macro F1** purely through static calldata inspection over public web3 RPCs—reducing computational overhead by orders of magnitude.
 
+
+---
+
+### 13. Phase 6: Interactive Security Dashboard & Live Transaction Inspector 🖥️🛡️
+
+In addition to offline batch evaluation scripts, an interactive web interface (`app.py`) was engineered using Streamlit to demonstrate real-time transaction decoding, threat tier classification, and risk profiling.
+
+#### Key Features:
+* **Sub-Second Static Calldata Inspection**: Evaluates transaction payload signatures (`tx['input']`) and native value (`tx['value']`) against public Ethereum archive nodes without requiring local archive storage.
+* **Deterministic Risk Scoring**:
+  * `CRITICAL 🚨`: Ice Phishing & NFT Orders (Unrestricted token drainage permissions and marketplace sweeps).
+  * `HIGH ⚠️`: Address Poisoning (Zero-value vanity spoofing affecting transaction history).
+  * `MODERATE ⚠️`: Payable Contract Interactions (Direct single-transaction loss limit).
+  * `LOW ✅`: Standard native transfers and benign operations.
+* **Embedded Quantitative Benchmark Analytics**: Visualizes the $N=500$ confusion matrix and category performance statistics side-by-side.
+
+#### How to Launch the Dashboard:
+```powershell
+streamlit run app.py
+
+
 ## 📌 Project Roadmap & Progress Checklist 🚀
 
 Track the reproduction pipeline for the PTXPhish paper:
