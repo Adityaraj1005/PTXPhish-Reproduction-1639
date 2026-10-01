@@ -346,6 +346,7 @@ In addition to offline batch evaluation scripts, an interactive web interface (`
 #### How to Launch the Dashboard:
 ```powershell
 streamlit run app.py
+```
 
 
 ## 📌 Project Roadmap & Progress Checklist 🚀
