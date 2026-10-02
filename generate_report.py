@@ -110,7 +110,7 @@ story = []
 # Title
 story.append(Paragraph("PTXPhish: Detecting Ethereum Transaction Scams", title_style))
 story.append(Paragraph("<b>Comprehensive Research Reproduction & Systems Engineering Report</b>", sub_title_style))
-story.append(Paragraph("<b>Author / Candidate Roll:</b> 2024UCP1639 &nbsp;|&nbsp; <b>Reference Paper:</b> NDSS 2025 (PTXPhish) &nbsp;|&nbsp; <b>Tech:</b> Python, Web3.py, Streamlit", meta_box_style))
+story.append(Paragraph("<b>Candidate Roll:</b> 2024UCP1639 &nbsp;|&nbsp; <b>Reference Paper:</b> NDSS 2025 (PTXPhish) &nbsp;|&nbsp; <b>Tech:</b> Python, Web3.py, Streamlit", meta_box_style))
 story.append(HRFlowable(width="100%", thickness=1.5, color=colors.HexColor("#1d4ed8"), spaceBefore=8, spaceAfter=10))
 
 # Section 1: Plain English Dictionary
