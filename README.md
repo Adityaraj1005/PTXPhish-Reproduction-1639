@@ -349,6 +349,20 @@ streamlit run app.py
 ```
 
 
+---
+
+### 📄 Formal Reproduction Report
+
+A complete academic and systems evaluation report is included in the root directory: **[`report.pdf`](report.pdf)**.
+
+#### What it covers:
+* **Plain-English Security Dictionary**: Plain-language explanations of calldata, 4-byte Keccak selectors, RPC pools, and blind signing.
+* **Threat Mechanics**: Detailed technical breakdowns of Ice Phishing, NFT Order Scams, Address Poisoning, and Payable Function Scams.
+* **Script Architecture**: Comprehensive explanations of `scripts/run_evaluation.py`, `scripts/generate_metrics.py`, and `app.py`.
+* **Empirical Comparison ($N=500$)**: Side-by-side performance table evaluating lightweight static calldata analysis against full EVM state replay simulation.
+* **Boundary Analysis**: Concrete case studies showing why static inspection achieves 88.60% accuracy and where dynamic bytecode tracing is required.
+
+
 ## 📌 Project Roadmap & Progress Checklist 🚀
 
 Track the reproduction pipeline for the PTXPhish paper:
