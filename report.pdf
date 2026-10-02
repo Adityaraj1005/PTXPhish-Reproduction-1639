@@ -1,324 +1,99 @@
-ACADEMIC RESEARCH & REPRODUCTION REPORT 📄🛡️
-Title: Reproducing and Evaluating Lightweight Deterministic Detection of Payload-Based Transaction Phishing (PTXPhish) on Ethereum
-
-Target Venue Reference: Network and Distributed System Security Symposium (NDSS 2025) 🏛️
-
-Candidate Roll Number: 2024UCP1639 🎓
-
-Status: Completed Engineering Deliverable & Empirical Benchmark 🚀
-
-1. Executive Summary & Research Background 🏛️🔍
-1.1 The Vulnerability: The Blind Signing Crisis in Web3 🙈💸
-In traditional Web2 cybersecurity, attackers focus primarily on stealing user credentials (usernames, passwords, multi-factor authentication tokens, session cookies) 🌐🔑.
-
-In Ethereum and decentralized Web3 ecosystems, private keys are securely isolated inside cryptographic hardware vaults or browser wallet software such as MetaMask 🔒. Consequently, attackers shifted their strategy toward Payload-Based Transaction Phishing (PTXPhish):
-
-When interacting with decentralized applications (DApps), users are presented with a cryptographic signing prompt 📝.
-
-Standard wallets present the raw transaction data as unreadable hexadecimal strings (referred to as calldata) alongside contract addresses 🧩.
-
-Normal users cannot decompile raw EVM bytecode or decipher 4-byte Keccak function selectors in real time. Attackers exploit this cognitive gap by presenting visually persuasive front-end websites (e.g., claiming a high-value airdrop, minting exclusive NFTs, or performing a security update) while the actual transaction instructions execute arbitrary approvals or transfer user balances directly to drainer contracts 🎭📉.
-
-Because transactions committed to the Ethereum ledger are irreversible, funds are permanently extracted without any compromise of the victim's private key ⚡💸.
-
-1.2 The Original NDSS 2025 Research Paper 📜🔬
-The foundational paper ("Dissecting Payload-based Transaction Phishing on Ethereum", NDSS 2025) provided the first systematic, large-scale empirical dissection of transaction-level phishing attacks on Ethereum.
-
-The Researchers' Setup: The authors constructed a dataset of over 18,500 confirmed phishing transactions and evaluated dynamic detection techniques. They ran full-state execution replays on a private, dedicated Ethereum archive node (exceeding 2 Terabytes of historical state data), reaching an overall macro F1-score greater than 0.99.
-
-The Core Research Limitation: While full EVM state replay simulation yields high detection accuracy, it requires heavy storage infrastructure and incurs multi-second execution overhead. This makes it unfeasible for zero-cost reproduction or ultra-low-latency, client-side pre-signing checks inside consumer wallet extensions.
-
-1.3 Scope and Purpose of this Reproduction Project 🎯💡
-This project evaluates the performance boundaries of a zero-simulation, client-side deterministic heuristic cascade:
-Infrastructure Democratization: Replacing multi-terabyte dedicated local archive nodes with a resilient, multi-node public Web3 RPC failover pool operating completely within free public limits.
-Deterministic Heuristic Engine: Classifying incoming transaction payloads using purely static calldata inspection (4-byte Keccak selectors and native Ether values) without running bytecode execution engines.Multi-Scale Empirical Verification: Validating the detection engine across stratified, balanced subsets ($N=100$ and $N=500$) drawn from the official NDSS 2025 benchmark dataset.
-Interactive Software Artifact: Delivering an interactive, real-time security dashboard (app.py) for live transaction analysis and visual metric verification.
-
-2. Threat Vector Taxonomy: The 4 Classes of Web3 Phishing 🦹‍♂️📊
-The project classifies malicious transactions into
-four distinct semantic attack vectors based on calldata signatures and execution objectives.
-
-[Incoming Ethereum Transaction]
-                                        │
-                         Is Function Selector in NFT List?
-                                 (0xfb0f3ee1, etc.)
-                                   ┌────┴────┐
-                                 YES         NO
-                                  │          │
-                 [NFT Order Phishing Scam]   Is Selector 0xa9059cbb AND Value == 0?
-                                             ┌────┴────┐
-                                           YES         NO
-                                            │          │
-                           [Address Poisoning Scam]   Is Selector in Ice Phishing List?
-                                                      (0x095ea7b3, 0xa22cb465, etc.)
-                                                       ┌────┴────┐
-                                                     YES         NO
-                                                      │          │
-                                     [Ice Phishing Scam]       Is Value > 0 OR Calldata > 10 chars?
-                                                               ┌────┴────┐
-                                                             YES         NO
-                                                              │          │
-                                             [Payable Function Scam]   [Benign / Unknown]
-
-
-**2.1 Ice Phishing (Token Approval Abuse) 🧊🎣**
-
-**Mechanism:** Rather than requesting immediate token transfers, the attacker induces the victim to execute ERC-20 `approve(address spender, uint256 amount)` or ERC-721/ERC-1155 `setApprovalForAll(address operator, bool approved)`.
-
-**Execution Pathway:** The victim interacts with a deceptive DApp interface.
-
-The transaction modifies the token contract's internal storage mapping, authorizing the attacker's smart contract address as an approved spender for an unlimited allowance (`type(uint256).max`).
-
-At a later time, the attacker issues automated `transferFrom` calls to extract the approved tokens from the victim's wallet into an obfuscated mixer or treasury address.
-
-**Relevant Function Selectors:**
-
-`0x095ea7b3`: `approve(address,uint256)`
-
-`0xa22cb465`: `setApprovalForAll(address,bool)`
-
-`0xd505accf`: `permit(...)`
-
-`0x39509351`: `increaseAllowance(address,uint256)`
-
-`0x23b872dd`: `transferFrom(address,address,uint256)`
-
-`0xcaa5c23f`: `byteApproval(...)`
-
-**Risk Profile:** **CRITICAL 🚨**
-
-Signing this transaction establishes persistent third-party extraction authority over current and future wallet balances.
-
-
-
-
-**2.2 NFT Order Phishing (Off-Chain Signature & Marketplace Exploits) 🎨📦**
-
-**Mechanism:** Exploits decentralized marketplace exchange protocols, such as OpenSea Seaport, Blur, and modern signature-based routers like Uniswap Permit2.
-
-**Execution Pathway:** Attackers trick victims into generating an off-chain structured cryptographic signature (via EIP-712).
-
-This signature approves an order selling their high-value non-fungible tokens for negligible or zero currency.
-
-The attacker subsequently submits this signature on-chain using batch fulfillment methods, acquiring the token instantly while circumventing simple approval warnings.
-
-**Relevant Function Selectors:**
-
-`0xfb0f3ee1`: `fulfillOrder(...)` (Seaport v1.1)
-
-`0xb3a34c4c`: `fulfillAdvancedOrder(...)`
-
-`0xe7acab24`: `fulfillAvailableAdvancedOrders(...)`
-
-`0xedd62e24`: `fulfillAvailableOrders(...)`
-
-`0x32389b71`: `matchOrders(...)`
-
-`0x2b95044d`: Uniswap Permit2 batch execution
-
-`0xa8174404`, `0xb3be57f8`, `0x3659cfe6`: Aggregated order fulfillments and Blur exchange routines.
-
-**Risk Profile:** **CRITICAL 🚨**
-
-Triggers immediate transfer of specific high-value collectibles via legitimate exchange infrastructure.
-
-
-
-**2.3 Address Poisoning Scams (History Spoofing via Zero-Value Transfers) ☠️📬**
-
-**Mechanism:** Attackers exploit human cognitive shortcuts and wallet UX designs that truncate long hexadecimal addresses (e.g., displaying `0x7F83...61b3`).
-
-**Execution Pathway:** The attacker monitors the victim's outgoing transactions.
-
-Using vanity address generators (such as vanity-miner tools), the attacker crafts a fraudulent address possessing identical leading and trailing hexadecimal characters to a legitimate counterpart the victim frequently interacts with.
-
-The attacker then broadcasts an ERC-20 `transfer(to, 0)` call with zero value from that vanity address to the victim.
-
-Many ERC-20 contracts allow transfers of zero tokens without reverting.
-
-Once confirmed, this zero-value transaction appears in the victim's wallet history.
-
-When the victim later attempts to transfer funds to their trusted counterpart, they copy the attacker's vanity address from recent transaction history.
-
-**Detection Rule:** `selector == "0xa9059cbb"` (ERC-20 `transfer(address,uint256)`) combined with native transaction value `value == 0`.
-
-**Risk Profile:** **HIGH ⚠️**
-
-Does not extract funds upon signing, but permanently poisons transaction history to facilitate subsequent manual transfer theft.
-
-
-**2.4 Payable Function Scams (Direct Exploits & Blind Interaction) 💸🚪**
-
-**Mechanism:** Phishing attempts involving direct execution of deceptive contract methods accompanied by native Ether transfers or arbitrary interactive execution.
-
-**Execution Pathway:** The victim is persuaded to interact with an unverified contract under the pretense of minting an exclusive token, staking into a high-yield protocol, or executing a security update.
-
-The transaction transfers native ETH directly into the attacker contract's fallback or payable entry point without transferring any valid utility or assets in return.
-
-**Detection Rule:** Any transaction where `value > 0` or interactive calldata length exceeds 10 hex characters without matching the specific signature sets of Ice Phishing, NFT Order Scams, or Address Poisoning.
-
-**Risk Profile:** **MODERATE ⚠️**
-
-Financial loss is strictly bounded to the Ether sent and gas consumed during the immediate transaction, without granting ongoing authorization over remaining wallet assets.
-
-
-## 3. System Architecture & Engineering Implementation ⚙️📐
-
-The software architecture is modularized into three functional layers: the Resilient RPC Infrastructure, the Deterministic Cascade Engine, and the Real-Time Presentation Interface.
-
-### 3.1 Resilient Multi-Node RPC Failover Architecture 🌐🛡️
-
-Public Web3 nodes enforce strict rate limits (e.g., HTTP 429 Too Many Requests), periodic dropped connections, or historical block pruning.
-
-To ensure automated benchmark execution without requiring a private archive node, we constructed a resilient connection pool across multiple public Ethereum archive endpoints:
-
-1. `https://ethereum.publicnode.com`
-
-2. `https://rpc.payload.de`
-
-3. `https://cloudflare-eth.com`
-
-4. `https://eth.llamarpc.com`
-
-5. `https://1rpc.io/eth`
-
-Each client connection is initialized through `web3.py` with custom request timeouts (8 to 12 seconds).
-
-If an RPC node times out, drops the socket connection, or returns an error, the execution pipeline automatically fails over to the next provider in the pool.
-
-
-### 3.2 Detailed Script-by-Script Breakdown 💻📜
-
-#### A. Data Preprocessing & Evaluation Script: `scripts/run_evaluation.py`
-
-This script executes the offline batch benchmark against historical transactions.
-
-**`fetch_transaction_resilient(tx_hash, max_retries=3)`:** Accepts a transaction hash, formats it into `HexBytes`, and iterates through the RPC pool.
-
-It implements exponential backoff to handle rate limits, guaranteeing that transient network drops do not invalidate long batch benchmarks.
-
-**`classify_transaction(tx, client)`:** Implements the deterministic 4-tier decision cascade.
-
-It extracts the raw input bytes from `tx['input']`, normalizes the hexadecimal representation, isolates the first 4 bytes (the 10-character selector string including `0x`), converts native Wei into Ether (`client.from_wei(tx['value'], 'ether')`), and steps through the sequential logic gates.
-
-**Stratified Balanced Sampling Routine:** Using `pandas`, the script filters the 18,556 raw transactions in `dataset/cleaned_ptxphish.csv`.
-
-It extracts an equal number of verified ground-truth samples across all four classes (e.g., 25 per class for $N=100$, 125 per class for $N=500$ with fixed `seed=42`).
-
-The script executes evaluation sequentially and exports the comparative output to `results/large_evaluation_benchmark_500.csv`.
-
-
-#### B. Quantitative Analytics Script: `scripts/generate_metrics.py`
-
-This script ingests the benchmark evaluation CSV and performs formal statistical assessment.
-
-**Mathematical Operations:** Imports `accuracy_score`, `precision_recall_fscore_support`, and `confusion_matrix` from `scikit-learn`.
-
-It computes overall balanced accuracy, class-specific Precision, Recall, and F1-Scores, as well as the unweighted Macro Average F1-Score.
-
-**Visualization Generator:** Utilizes `matplotlib` and `seaborn` to generate a 4×4 annotated confusion matrix heatmap (`confusion_matrix_500.png`).
-
-The heatmap displays exact true positives, false positives, and cross-category classification migrations.
-
-#### C. Interactive Inspection Dashboard: `app.py`
-
-Developed with `streamlit` to provide a practical interface for real-time transaction inspection.
-
-**Real-Time Calldata Parsing:** Accepts any arbitrary 66-character Ethereum transaction hash via user input, safely casts it using `HexBytes`, queries the live archive pool, and runs the heuristic cascade in under 200 milliseconds.
-
-**Dynamic Threat Telemetry:** Renders metric cards highlighting the determined **Risk Level** (`CRITICAL`, `HIGH`, `MODERATE`, `LOW`), the extracted **Function Selector**, and the transferred **ETH Value**, alongside full decoded JSON metadata.
-
-**Benchmark Audit Integration:** Contains a secondary interface tab rendering the formal $N=500$ confusion matrix and empirical metrics to verify system performance.
-
-
-4. Empirical Evaluation & Comparative Benchmarks 📊🔬
-
-The reproduction was evaluated across two structured phases
- and compared directly against the original NDSS 2025 research baseline.
-
- ### 4.1 Comprehensive Architectural & Performance Comparison Table 🏛️⚡
-
-| **Dimension 📐**                | **Original PTXPhish Study (NDSS 2025) 🏛️**                   | **Our Reproduction Pipeline (Phase 3b: N=100) 🎯**                      | **Our Scaled Benchmark (Phase 3c: N=500) 🚀**                       |
-| ------------------------------- | ------------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| **Detection Methodology**       | Deterministic heuristics + EVM state replay simulation ⚙️     | Deterministic 4-tier decision cascade via calldata selectors 🌲         | Deterministic 4-tier decision cascade via calldata selectors 🌲     |
-| **Node Infrastructure**         | Dedicated local Archive Geth/Erigon node (~2 TB storage) 🖧💾 | Multi-node archive RPC pool with dynamic failover 🌐🔄                  | Multi-node archive RPC pool with dynamic failover 🌐🔄              |
-| **Evaluation Scope**            | 18,556 total transactions (heavily imbalanced) 📚             | Stratified balanced evaluation ($N = 100$, 25/class, `seed=42`) 🎲      | Stratified balanced evaluation ($N = 500$, 125/class, `seed=42`) 🎲 |
-| **Overall Accuracy**            | ~96%–99%                                                      | **92.00%** 🏆                                                           | **88.60%** 🏆                                                       |
-| **Primary Metric (Macro F1)**   | Macro F1 > 0.99 (full state replay) 🏆                        | **Macro F1: 0.92** 🎯                                                   | **Macro F1: 0.89** 🎯                                               |
-| **Per-Class F1 (NFT Order)**    | > 0.99 🎯                                                     | **1.00** 🎯                                                             | **0.99** 🎯                                                         |
-| **Per-Class F1 (Poisoning)**    | > 0.99 🎯                                                     | **0.96** 🎯                                                             | **0.96** 🎯                                                         |
-| **Per-Class F1 (Payable)**      | > 0.98 🎯                                                     | **0.86** 🎯                                                             | **0.79** 🎯                                                         |
-| **Per-Class F1 (Ice Phishing)** | > 0.98 🎯                                                     | **0.86** 🎯                                                             | **0.81** 🎯                                                         |
-| **Runtime Overhead**            | Heavy (full EVM state reconstruction per block) ⏳             | Ultra-lightweight (single RPC query per tx with in-memory inspection) ⚡ | Ultra-lightweight (~0.2s per tx rate-limited pacing) ⚡              |
-
-
-5. Architectural Discrepancy & Misclassification Analysis 🔍⚖️
-A central analytical contribution of this project is explaining why the original researchers achieved >0.99 
-Macro F1 while pure static calldata analysis caps at 88.60%
-
-
-### 5.1 Why the Paper Got 99% and We Got 88.6% ⚙️ vs 📄
-
-Think of an Ethereum transaction like a locked wooden box delivered to your house:
-
-**The Original Paper's Approach (X-Ray Machine):** The authors opened the box and watched everything happen inside a test simulator.
-
-Even if an attacker hid a malicious command inside three layers of secret code, the simulator ran every single step, saw the tokens move, and caught it.
-
-That is why they achieved **99% accuracy**.
-
-The problem is that doing this requires a massive, expensive computer with terabytes of storage.
-
-**Our Approach (Reading the Label on the Box):** We do not run the code.
-
-Instead, we look at the label on the outside of the box (the first 10 characters of code, called the function selector, and the ETH amount).
-
-This costs **$0**, runs in less than half a second on normal public servers, and catches **88.6% of all scams**.
-
-### 5.2 Where Our Method Gets Fooled (The 3 Blind Spots) 🙈🚫
-
-Because we only read the "outside label," attackers can trick our rules in three specific ways:
-
-**1. Middleman Contracts (Hidden Ice Phishing) 🎭**
-
-A user clicks a button on a fake website.
-
-The transaction says it is calling a function called `execute()`.
-
-Our tool looks at the label, sees `execute()`, does not recognize it as a token approval, and labels it as a generic contract interaction (Payable Scam).
-
-But behind the scenes, that `execute()` function immediately calls `approve()` to steal tokens.
-
-Without running the code, our static check cannot see the hidden command.
-
-**2. Bundled Transactions (Multicall) 📦**
-
-Some advanced attacks bundle 5 different actions into a single transaction (like a ZIP file).
-
-The outside label just says `multicall()`.
-
-Because our script only inspects the first outer function selector, it does not unpack the bundle to see the malicious NFT order hidden inside.
-
-**3. Free Fake Transactions (Zero-ETH Scams) 🪙**
-
-Some malicious functions, such as a fake `claimAirdrop()`, do not take any ETH upfront.
-
-Our rule looks for either ETH being sent or specific known approval codes.
-
-If an attack uses a completely custom function name and sends 0 ETH, our static rules can struggle to tell whether it is an Ice Phishing drainer or a normal contract call.
-
-### 6. What This Means in the Real World 🛡️💡
-
-**Why Wallets Care:** Nobody wants to wait 5 to 10 seconds for a heavy simulator to run every time they click a button in MetaMask.
-
-**The Smart Hybrid Solution:** Use our lightweight method as the **first defense line**.
-
-It catches **almost 90% of scams instantly (<0.2 seconds)** right inside the user's browser.
-
-If a transaction looks unusual or uses an unknown code, only then send it to a heavy, slow simulator to check the rest.
-
-### Conclusion 🎯
-
-We built a working, zero-cost scam detector that catches **88.6% of attacks** using public Ethereum nodes.
-
-We proved that you do not need expensive server equipment to stop the vast majority of phishing attacks, while also identifying the technical reasons why the remaining ~11% require deeper simulation.
+%PDF-1.4
+%���� ReportLab Generated PDF document (opensource)
+1 0 obj
+<<
+/F1 2 0 R /F2 3 0 R /F3 4 0 R
+>>
+endobj
+2 0 obj
+<<
+/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
+>>
+endobj
+3 0 obj
+<<
+/BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding /Name /F2 /Subtype /Type1 /Type /Font
+>>
+endobj
+4 0 obj
+<<
+/BaseFont /Helvetica-Oblique /Encoding /WinAnsiEncoding /Name /F3 /Subtype /Type1 /Type /Font
+>>
+endobj
+5 0 obj
+<<
+/Contents 10 0 R /MediaBox [ 0 0 612 792 ] /Parent 9 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+6 0 obj
+<<
+/Contents 11 0 R /MediaBox [ 0 0 612 792 ] /Parent 9 0 R /Resources <<
+/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>> /Rotate 0 /Trans <<
+
+>> 
+  /Type /Page
+>>
+endobj
+7 0 obj
+<<
+/PageMode /UseNone /Pages 9 0 R /Type /Catalog
+>>
+endobj
+8 0 obj
+<<
+/Author (\(anonymous\)) /CreationDate (D:20261002104131+05'00') /Creator (\(unspecified\)) /Keywords () /ModDate (D:20261002104131+05'00') /Producer (ReportLab PDF Library - \(opensource\)) 
+  /Subject (\(unspecified\)) /Title (\(anonymous\)) /Trapped /False
+>>
+endobj
+9 0 obj
+<<
+/Count 2 /Kids [ 5 0 R 6 0 R ] /Type /Pages
+>>
+endobj
+10 0 obj
+<<
+/Filter [ /ASCII85Decode /FlateDecode ] /Length 2764
+>>
+stream
+Gatm<mr-r?')eE:@QlC!K<7c:O4XVRJM^)EZe')CZ.lr&!>`%1gY>W"QB^C=\3KuLOI#4`M0BJIK-n#p;D[oVhRl]P0n'c84"H+ncfsP66:jf@,pe1W5kDI,2*_!0/D7-F`AAKmYSbud,Ya#g#t;ra4s(:`iihASg!prM9(lm.`\]>fE(\6>%o-%e[W<rLC[rfNjbcHoe(')tNMu[=>I@Yd)p,kZNNAs.<2j-)Z55@tKBE3,%U[IqAP+^NRYn4*,4E2\:?FCBU3%U7S?A,]j2Co1]?YNt++NtO"_#5I]p;\W7CrQFrYn(/3]n5`LVNJ=SP&bF$G/3)c_>M:8Dn%.p]'`,4APc@7"jB%i^m].@;[CY/,r"t[boc3?f0(>PfDsLr_'kM]2Let]#eMde#h$oBHOYk5$UjH;1EW!F)&rAL_J$J;)doVn"hH_NC`3]K&NJJ@;E8="A]5u+,?L7[))cLcD'i>*5dME&eEqYreBdLrTUEUgBnim;Z,'%HfDOpGrE\*D2^L/#]c)uNs=bQp+W'\ek!@D4N'49kiu#W9s#H^c'k@<G"Y'83@BO*f(<-VpFC$J1-amS0RX;s;&g%Y3J1]LK#eb\T'+7H3]AA`-5V)nR;lG4bJJD$ERI`reUseHh92oF.gr%C;U/sl?u/f%UntK'q*nIX`mV_m%I`$W%DZ3OkXm6&ClfEYgEf_KE(sNfqULM!GW_#4&\AKpjC>$GWXlB[R,1tZL!"IO<OP>:i)o.WjYF^eXO-5Glk3<p<@0[q*'?JcOd,3mo-TY9)n8sQ.<;]?P1K2$hum$c9c4Ac74ind%sj.N/R)FhDr\TCQAKrl2J#EG-T*[2=SVa/56A?G*2MG;HO5J-9UQ*NK^s=4S8/Jo%kUk_`a]Tg-@uJ&Ds=DLUK,g?9FFi?;M%_'\#+0cB&)kY<1A5;]"8aj^#t9t9Y"-25R:a7(h6>\GZ)8=[`]JXV"un?^b!iu-p9iPBk=DoJ0Sg&\,1s(8*iNm_K:P*<*Bc$rVr(*7j2@Q+:ZHIRDX_)Q\!0ik^4^!#Hl_]pAut_1eu)=>DbaY\CbiiK+\/VCV'B;%QcYq<`WBX1e"0.+Qd_5AM/&L)k<`6&qRP0\O9)S9*]!V6q;K]K8^Nqa\i(TXcPbf\`=!)+dU'oA4#`QAdr#nG;$Pg)H='nQWCmu0NWm!!IUKYjLu0dYbtMbLC+.g>[M%Xn5uI!&/QB?M1Dnlb*o(e+M._qb0ZA\-,V?n8m0+S/:@)k_@8=EZ%(ITBhe&;&A"YJ>$6=,b"s+<%A,E71)();^g5#GK1&!rS^NC2XD1S1=eLp9G.5rD^W;c@TZrg9#kJA.rCjPKFuq,X";P4k7ph95(QYFM`V.fVqr?'9K-L!bBh6<O_O'E\SkIPI_keLM)t'<0QB%K&F-Y0B"g@t?>qEc[G;!8CnJI^Hk<DI<\!OcbAg5,.H.RTQ\Eh(onRO&eq4`qR?AW(?H())][aoUuU@#k$NP3\bIt1)=CbZb9n[19^!Y*Y+:*t`S<&9=);YS,f!'C?6RX/hPq@kC`>B@uY+OCXcfg,q<]MLkb@\>!LXXX2.R95TZ4/_t&Vf.j4Imo^52tNN^Mmk&iV;EAEJ%1S"^L#7N^!..@(:5Hnq+rU0/mLoi?FFJ?YAU5NF,3ZTH,4Xjg6ROchTHg2K1+XH^jY1Ej-`.lRRp?o>9Df.W`gmSK.6?NEY0u%;C3IN&#dL-W+a>==f29c[umue"OZ9+Q]s!W'IGG.e)3toV-K_&(&'^=@:]0b#^[![()Z9]rr-<t,J(s;"Ob]I5\G&JVcb>RpB2ZVXdGcH/1(#jH4VCs:_CtQ*X0+m&slfKGS++eW?-IM?*iUQ9T$nuY]k'i7gAAaEYYUKbJHa0+@&_LnLiV/12V*gKc5TJS7IOHQi*S-`W<+IU)8`+fR&/hpC^9n#G!bdTX@n#\m\$:WbnpH:O]a$I_PXBkL4AZddI^u+QAg/CT-Q"%m>^!)b@?Y2p%@o![VdrL]8@F>ZpK+W$Pd4[EBAk%71#V324D6iDl>PLF1@G0'<]pXU&3X0>'3EL1mQrO",f`)^H?5-lOm>!;aaF94fj;o0jD@;Ml,\Pn,2ib.k$LGOOEoh-S=/:;`4d^V_%BEg_3`N_p)<Q=UT-M]_/;kG87(m7fcU82<4I,/-&jDYK"gh4Lj(dU"=qNR:O4`[.\:'b&E@E^5)<E[OUb7ffB]LG>_8=lttM]^G(g^atVD_dq-g3ZU8--[qhpO[WN>RA*?_b+`0:7(Hj-D45jO0uERe-`l8;=pkm%(AfTgIo6K]kD+joD9>A@f:SfX`e65?:q*V:I[6%u[k,g.!^V9,c14%h;Q[U96hRhX<i_hGg$3*'-2lkt'R1qaDo&Z+c+u%TaqY+!DIAl4<UF,HVYj`fmmkq%))];e;>Tk#_PI=L$_c6Rn?5*7qY12H_mnHR6E\p1Q-BCK2mb2GP4W5WO@</P21,p8"o17DeI(QLPH.t"!GE3"f@popGYXU3O+cB6Rnnc_ErQ$4b:bohW!3WX<3GbTX$$`.gX:O(,a4F=0$#-EbIL=&X1G4*Y`SFC-db7qXVS`q-cNr)0ADT0E*"(aGRo_RZ3I\Hp%,)&3:]@MRY$lk6`aYO8g\D`?tWPc`4c81Z8At]TQh5hGRrP]Q1B$Y8&p#PbsB'(kQ,UT>;$D/L:[q+olK*)TNR7'U<r,>#Hn_ac?`=$8\&H\:20TL"cs!"pUX^+:)KJgO$\hi+S,GFNgs_A67gkm'qqS?$5T32%pXB=qu~>endstream
+endobj
+11 0 obj
+<<
+/Filter [ /ASCII85Decode /FlateDecode ] /Length 1391
+>>
+stream
+Gatm:?#LoG'Re<2\1_'KC71V1@":dPM.B0s.ESGme;'>R(s`B@bh1G=K[>MRp)_O6Uao?=Pp.J;`n/i*SpTl[$,q-8ot)c3/nah83h[gqfohMIe>LtO9kS*gSL+0S/>ci25VScQ3]SHNBM$<"D"qt?;UPq%U*LUgr?4Vo+<HRlb!oMp*0=H'V]X<ngaK5!.-MIj<T+sH8!g==\eOk#Y"ZA<<]Qr$C%`q!^(3JX`p5-/=Z1X29J;A024f8TB,hrq5\W!p`q[d;iM[8ppc6K36n_%pY[&/O$8)(J5!4q4cd8B3Rf&Ug+c6hme,@<Q*7NoOHeq?B!BF"p$?idb9<o,S]dLjjJ*a*)oCmBZ6ESgfbMg.:YTnjc,%hO/XnW4EpW"?_k_qu.(;HW$Pa)u(G77:2SAas33#[e@:.T0a3pD*U`q%O6-rf'*d8J(-]l@R#=9'V,`ae?\&4?3DZNK452J7s-Yb&8gP<?=5*"OC':[(k]*[U4ENF[?;/%;Z_!o>mT*g/aDSQHS"?_f)UFL(YSd2N@2&CJFJDU6a`dXjY3-S98`gg(JeWH9cZN[@pD4/^k*6uft-o`$uL)Jh0DK_h;n1n*gUTTED1QY[frW/Vr8DNne8=t-,<N<ng<GCJ1'B7=0nBdud$$a1h`HC?ekY="iCda?L3ZHad4Y!0ZQ%m?K_H:Nl6#VjuScR^TMN4q8Oq-Y$]o`CDcolZJfBU4/&6m`J@2:"@q2KgTe%_]M1O*@<p;OP[i1tlFf?mIFk!muAa4R\q\C[d=Jp2!$$Z(iZmkgT0IqVu*E]pda5OuKaKGn-:^An0)L.,'hgpmkumAKV)47h!;.E/JVA@a18V[%pQ;I>hi+n`-Gf7?Is2:?m/PbMJi61nm'VCp;ZG/qoYXf@dfLkQ;`TZ:'=oJH71g884upLU,/[mf\W[hu<\cV/VJ#C8iKcN`TVgN,@X!6tU+gm=MX\LcYQjl[>\aM:8qHV\da!Ce]+7qh]4Eeib`nThb=h937DMQlfG,.M(W%K)2jlaO[AI.:eW/CZ@.a#RdBMQ1J+[@"7+ASjH[&C8I!D.Ei-Vfda`@:Ed+S=`("K._-</RUP+dkXL!u8_X$YhA_hn(+(eU'5m1Vgi2Z6E69]+APkI1qSMZuK5\*;p+Cj>,#u.F0WB?JkR@a#<#4oaf>:J3BOn)a@/OU.0V[,%-IE^tG,@Nsru$gR_#[,P0B?V+Yu!U-22u+A6aFHMO+T_J]sPY%>D4S[ENJaDeSrIM<<DL9_$fa/'>qp28boLQ(1N'S>9Mo*F33/+70pd>GbI9RV-*V44`HC'*6qlamuP]/q87@NW6H+BT/VI$*jtetK5d`])jFDBW$M/K;]+<$=.s<9iQjsF0?SuP<P^imF*JrT3r9`ah<(.~>endstream
+endobj
+xref
+0 12
+0000000000 65535 f 
+0000000061 00000 n 
+0000000112 00000 n 
+0000000219 00000 n 
+0000000331 00000 n 
+0000000446 00000 n 
+0000000640 00000 n 
+0000000834 00000 n 
+0000000902 00000 n 
+0000001182 00000 n 
+0000001247 00000 n 
+0000004103 00000 n 
+trailer
+<<
+/ID 
+[<4bfff6d3a05a061654f181c3d678d90a><4bfff6d3a05a061654f181c3d678d90a>]
+% ReportLab generated PDF document -- digest (opensource)
+
+/Info 8 0 R
+/Root 7 0 R
+/Size 12
+>>
+startxref
+5586
+%%EOF
