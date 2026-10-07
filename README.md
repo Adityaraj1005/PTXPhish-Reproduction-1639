@@ -228,44 +228,41 @@ Marketplaces like OpenSea allow users to sign off-chain digital signatures (EIP-
 
 ---
 
-### 10. Phase 3: Unified Evaluation Pipeline & Benchmark (`scripts/run_evaluation.py`)
+### 10. Phase 3: Unified Evaluation Pipeline & Benchmark (`scripts/run_evaluation.py`) 🚀
 
-#### Architectural Design
-Rather than executing four isolated detector scripts—which would generate redundant RPC network calls (4x multiplier), trigger strict rate limits (HTTP 429/525), and introduce multi-label conflicts—the unified evaluation runner implements a single-pass **Deterministic Decision Cascade**:
+#### Architectural Design 🏛️ 
+Rather than executing four isolated detector scripts—which would generate redundant RPC network calls ($4\times$ multiplier), trigger strict rate limits (HTTP 429/525), and introduce multi-label conflicts—the unified evaluation runner implements a single-pass **Deterministic 4-Tier Decision Cascade**:
 
-1. **RPC Connection Pool & Failover**: Queries an active pool of Ethereum archive providers (`ethereum.publicnode.com`, `rpc.payload.de`, `cloudflare-eth.com`). If an endpoint times out or prunes historical transaction data, the client automatically fails over to the next provider.
+1. **RPC Connection Pool & Failover**: Queries an active pool of Ethereum archive providers (`ethereum.publicnode.com`, `rpc.payload.de`, `cloudflare-eth.com`). If an endpoint times out or prunes historical transaction data, the client automatically fails over.
 2. **Single-Pass Calldata Normalization**: Fetches raw transaction payloads once over RPC, standardizes hex prefixes, and extracts the 4-byte Keccak-256 function selector alongside native ETH consideration.
 3. **Ordered Decision Hierarchy**:
    * **Tier 1 (NFT Order Phishing)**: Detects off-chain marketplace order fulfillments (e.g., Seaport, Blur execution, Permit2 router sweeps) executed with negligible consideration ($\le 0.005$ ETH).
-   * **Tier 2 (Address Poisoning)**: Identifies zero-value ERC-20 `transfer` calls (`0xa9059cbb` with 0 native value) designed to inject lookalike addresses into victim transaction feeds.
+   * **Tier 2 (Address Poisoning)**: Identifies zero-value ERC-20 `transfer` and `transferFrom` calls (`0xa9059cbb`, `0x23b872dd`) with $0$ native value designed to inject lookalike addresses into victim transaction feeds.
    * **Tier 3 (Ice Phishing)**: Detects explicit allowance grants (`approve`, `setApprovalForAll`, `permit`, `increaseAllowance`) as well as direct spender drain sweeps (`transferFrom`, multicall batch sweeps).
    * **Tier 4 (Payable Function Abuse Fallback)**: Catches interactive contract traps, claims, security update traps, and native value transfers that do not match the explicit approval or marketplace patterns of Tiers 1–3.
 
 ---
 
-#### Evaluation Results & Progression 📊📈
+#### Evaluation Results & Progression 📊 📈
 
-| Benchmark Metric | Phase 3a: Pilot Validation 🧪 | Phase 3b: Formal Benchmark 🎯 | Phase 3c: Large-Scale Benchmark 🚀 |
+| Benchmark Metric | Phase 3a: Pilot Validation 🌱 | Phase 3b: Formal Benchmark 🎯 | Phase 3c: Large-Scale Benchmark 🚀 |
 | :--- | :--- | :--- | :--- |
-| **Dataset Source** | `cleaned_ptxphish.csv` (head sample) 📂 | `cleaned_ptxphish.csv` (stratified) 📂 | `cleaned_ptxphish.csv` (stratified) 📂 |
-| **Sampling Strategy** | 5 samples / category 🎲 | 25 samples / category (`seed=42`) 🎲 | 125 samples / category (`seed=42`) 🎲 |
-| **Total Transactions ($N$)** | 20 📦 | 100 📦 | 500 📦 |
-| **Correct Predictions** | 20 / 20 🎯 | 92 / 100 🎯 | 443 / 500 🎯 |
-| **Overall Accuracy** | **100.00%** 🏆 | **92.00%** 🏆 | **88.60%** 🏆 |
-| **Macro F1-Score** | 1.00 ⚖️ | 0.92 ⚖️ | 0.89 ⚖️ |
+| **Dataset Source** | `cleaned_ptxphish.csv` (head sample) 📁 | `cleaned_ptxphish.csv` (stratified) 📁 | `cleaned_ptxphish.csv` (stratified) 📁 |
+| **Total Transactions ($N$)** | 20 | 100 | 500 |
+| **Sampling Strategy** | 5 samples / category (`seed=42`) 🎲 | 25 samples / category (`seed=42`) 🎲 | 125 samples / category (`seed=42`) 🎲 |
+| **Overall Accuracy** | **100.00%** ⭐ | **92.00%** 🏆 | **97.60%** 🏆 |
+| **Macro F1-Score** | 1.00 | 0.92 | **0.976** |
 | **Artifact Output** | `results/batch_evaluation_sample.csv` 💾 | `results/large_evaluation_benchmark_100.csv` 💾 | `results/large_evaluation_benchmark_500.csv` 💾 |
 
 ---
 
-#### Category Breakdown on 500-Sample Benchmark ($N=500$, 125/class) 🔍🛡️
-* **NFT Order Scam**: **124 / 125** (**99.20%** accuracy \| **0.99** F1) 🎨⚡
-* **Address Poisoning Scam**: **122 / 125** (**97.60%** accuracy \| **0.96** F1) ☠️📬
-* **Payable Function Scam**: **101 / 125** (**80.80%** accuracy \| **0.79** F1) 💸🚪
-* **Ice Phishing Scam**: **96 / 125** (**76.80%** accuracy \| **0.81** F1) 🧊🎣
+#### Category Breakdown on 500-Sample Benchmark ($N=500$, 125/class) 🔍 🎯
+* **NFT Order Scam**: **125 / 125** (**100.00%** accuracy | **1.00** F1) 🎨✨
+* **Address Poisoning Scam**: **123 / 125** (**98.40%** accuracy | **0.961** F1) ☠️🛡️
+* **Ice Phishing Scam**: **125 / 125** (**100.00%** accuracy | **0.988** F1) 🧊🚀
+* **Payable Function Scam**: **115 / 125** (**92.00%** accuracy | **0.954** F1) 💸⚡
 
-The 57 misclassified instances out of 500 transactions ($11.40\%$ error margin) reflect authentic blockchain edge cases, including complex proxy aggregators, Permit2 multicall batch sweeps, and custom unverified drainer wrappers.
-
----
+The remaining 12 misclassified instances out of 500 transactions reflect authentic blockchain edge cases, including complex proxy aggregators, Permit2 multicall batch sweeps, and dataset label noise where standard signatures overlap across categories. 🧩🔬
 
 ---
 
