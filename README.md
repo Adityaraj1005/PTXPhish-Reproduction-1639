@@ -343,11 +343,25 @@ In addition to offline batch evaluation scripts, an interactive web interface (`
   * `LOW ✅`: Standard native transfers and benign operations.
 * **Embedded Quantitative Benchmark Analytics**: Visualizes the $N=500$ confusion matrix and category performance statistics side-by-side.
 
+* **Automated On-Chain Rescue Dispatcher (`alert_engine.py`):** Implements Section VIII of NDSS 2025 by generating 0-ETH rescue transactions carrying human-readable advisories encoded as UTF-8 calldata (`input`) directly targeted at the victim's wallet.
+* **1-Click Remediation Routing:** Dynamically generates direct links to `https://revoke.cash/address/<victim>` to immediately revoke active unlimited allowances and neutralize drainers.
+
 #### How to Launch the Dashboard:
 ```powershell
 streamlit run app.py
 ```
 
+
+### 14. Phase 7: On-Chain Victim Alert Dispatcher (Paper Section VIII — "The Last Line") 🛡️📬
+
+Section VIII of the NDSS 2025 paper details that detection alone is insufficient: researchers actively broadcasted **2,539 on-chain alert messages** to assist **1,980 victims** of phishing attacks.
+
+#### Architecture of `alert_engine.py`:
+1. **Advisory Encoding:** Transforms threat-specific mitigation instructions into UTF-8 hexadecimal byte strings.
+2. **0-ETH Payload Assembly:** Constructs an EVM transaction blueprint directed at the victim with `value = 0 ETH` and an estimated gas ceiling of 25,000 gas units.
+3. **Execution Modes:**
+   - **Simulation Mode (Academic / Demo):** Validates the victim target, estimates gas consumption, stages the encoded payload, and outputs a structured execution receipt in the Streamlit UI without burning live mainnet gas fees.
+   - **Production Broadcast Mode:** Prepared for Web3 signing via funded relayer wallets to dispatch immutable warning transactions directly to the Ethereum network.
 
 ---
 
@@ -383,8 +397,13 @@ Track the reproduction pipeline for the PTXPhish paper:
   - Detects off-chain signature abuse (e.g., Permit2 or fake SeaPort/marketplace orders).
 
 ### Phase 3: Evaluation, Batch Pipeline & Academic Metrics
-- [x] Build unified evaluation runner (`scripts/run_evaluation.py`) across all scam categories in `cleaned_ptxphish.csv`.
-- [x] Calculate paper metrics: **Accuracy, Precision, Recall, and F1-Score**.
-- [x] Generate comparative breakdown table matching the PTXPhish paper findings.
-- [ ] Final project presentation & documentation polish for 15-mark evaluation.
+* [x] Build unified evaluation runner (`scripts/run_evaluation.py`) across all scam categories in `cleaned_ptxphish.csv`.
+* [x] Calculate paper metrics: Accuracy, Precision, Recall, and F1-Score.
+* [x] Generate comparative breakdown table matching the PTXPhish paper findings.
+* [x] Implement paper Section VIII on-chain victim alert engine (`alert_engine.py`).
+* [ ] Final project presentation & documentation polish for 10/10 final evaluation.
 
+### Phase 4: Extended Multi-Dimensional Heuristics (Targeting 95%+ F1) 🚀
+* [ ] Integrate known drainer & poisoner address signatures (PinkDrainer, Inferno patterns).
+* [ ] RPC-level account profiling (`eth_getTransactionCount` checks to filter ephemeral deployers).
+* [ ] Deep calldata parameter inspection (infinite allowance `type(uint256).max` validation).
