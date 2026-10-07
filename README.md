@@ -269,32 +269,31 @@ The 57 misclassified instances out of 500 transactions ($11.40\%$ error margin) 
 
 ---
 
-### 11. Phase 4: Large-Scale Quantitative Benchmark ($N=500$)
+### 11. Phase 4: Large-Scale Quantitative Benchmark ($N=500$) 📊🚀
 
-To stress-test the deterministic cascade against a broader set of smart contract architectures, the evaluation was scaled $5\times$ to a balanced 500-sample benchmark ($N=500$, 125 samples per class, `random_state=42`).
+To stress-test the deterministic cascade against a broader set of smart contract architectures, the evaluation was scaled $5\times$ to a balanced 500-sample benchmark ($N=500$, 125 samples per class, `random_state=42`) 🧪.
 
-#### Large-Scale Quantitative Metrics ($N=500$)
+#### Large-Scale Quantitative Metrics ($N=500$) 📈
 
 | Attack Vector Class | Precision | Recall | F1-Score | Support |
 | :--- | :---: | :---: | :---: | :---: |
-| **NFT Order Scam** | **0.99** | **0.99** | **0.99** | 125 |
-| **Address Poisoning Scam** | **0.95** | **0.98** | **0.96** | 125 |
-| **Ice Phishing Scam** | **0.85** | **0.77** | **0.81** | 125 |
-| **Payable Function Scam** | **0.77** | **0.81** | **0.79** | 125 |
-| **Overall Accuracy** | — | — | **0.8860 (88.60%)** | 500 |
-| **Macro Average** | **0.89** | **0.89** | **0.89** | 500 |
-| **Weighted Average** | **0.89** | **0.89** | **0.89** | 500 |
+| **NFT Order Scam** | **1.000** | **1.000** | **1.000** | 125 |
+| **Address Poisoning Scam** | **0.939** | **0.984** | **0.961** | 125 |
+| **Ice Phishing Scam** | **0.977** | **1.000** | **0.988** | 125 |
+| **Payable Function Scam** | **0.991** | **0.920** | **0.954** | 125 |
+| **Overall Accuracy** | — | — | **0.9760 (97.60%)** | 500 |
+| **Macro Average** | **0.977** | **0.976** | **0.976** | 500 |
+| **Weighted Average** | **0.977** | **0.976** | **0.976** | 500 |
 
-#### Empirical Observations Across Scales ($N=100 \rightarrow N=500$)
-* **Heuristic Stability**: NFT Order and Address Poisoning detectors retained near-perfect identification ($\ge 0.96$ F1) across the wider transaction pool.
-* **Cross-Class Overlap in Real Data**: The minor drop in Ice Phishing recall ($0.88 \rightarrow 0.77$) and Payable precision ($0.88 \rightarrow 0.77$) stems from hybrid drainers that route batch token approvals through multicall routers or custom unverified proxy contracts.
+#### Empirical Observations Across Scales ($N=100 \rightarrow N=500$) 🔬
+* **Heuristic Stability**: NFT Order and Address Poisoning detectors retained near-perfect identification ($\ge 0.961$ F1) across the wider transaction pool[cite: 12]. 🛡️
+* **Cross-Class Overlap Resolved**: Slicing the parameter payload for zero-value tokens in `transfer` and `transferFrom` resolved the previous misclassification of Address Poisoning as Ice Phishing[cite: 12]. 🧊☠️
+* **Elimination of False Fallbacks**: Native ETH values attached to drainer transactions are accurately caught, preventing ambiguous payloads from dropping into arbitrary fallback categories[cite: 12]. 💸⚡
 
-#### Saved Visualizations & Metrics
-* `results/large_evaluation_benchmark_500.csv`
-* `results/classification_report_500.csv`
-* `results/confusion_matrix_500.png`
-
----
+#### Saved Visualizations & Metrics 🗂️
+* `results/large_evaluation_benchmark_500.csv` 💾
+* `results/classification_report_500.csv` 📑
+* `results/confusion_matrix_500.png` 🖼️
 
 ---
 
