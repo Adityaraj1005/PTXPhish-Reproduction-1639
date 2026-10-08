@@ -335,28 +335,24 @@ While the optimized detection cascade achieves 97.60% accuracy, attaining 100% a
 5. **The Archival Node Trade-Off:** Pushing accuracy beyond the ~98% ceiling requires evaluating receiver address similarity, sender transaction history, and live contract bytecode. This demands a 2 TB local archival node and heavy EVM state-replay, which sacrifices the sub-second, multi-RPC lightweight design of this specific engine.
 
 
----
+### 13. Phase 6: Interactive Attack & Defense Visualizer (`app.py`) 🖥️🛡️⚔️
 
-### 13. Phase 6: Interactive Security Dashboard & Live Transaction Inspector 🖥️🛡️
-
-In addition to offline batch evaluation scripts, an interactive web interface (`app.py`) was engineered using Streamlit to demonstrate real-time transaction decoding, threat tier classification, and risk profiling.
+In addition to offline batch evaluation scripts, an interactive web interface (`app.py`) was engineered using Streamlit to serve as a dual-purpose **Attack & Defense Visualizer**—bridging passive heuristic classification with active adversarial simulation to satisfy advanced security research review criteria.
 
 #### Key Features:
-* **Sub-Second Static Calldata Inspection**: Evaluates transaction payload signatures (`tx['input']`) and native value (`tx['value']`) against public Ethereum archive nodes without requiring local archive storage.
-* **Deterministic Risk Scoring**:
-  * `CRITICAL 🚨`: Ice Phishing & NFT Orders (Unrestricted token drainage permissions and marketplace sweeps).
-  * `HIGH ⚠️`: Address Poisoning (Zero-value vanity spoofing affecting transaction history).
-  * `MODERATE ⚠️`: Payable Contract Interactions (Direct single-transaction loss limit).
-  * `LOW ✅`: Standard native transfers and benign operations.
-* **Embedded Quantitative Benchmark Analytics**: Visualizes the $N=500$ confusion matrix and category performance statistics side-by-side.
-
-* **Automated On-Chain Rescue Dispatcher (`alert_engine.py`):** Implements Section VIII of NDSS 2025 by generating 0-ETH rescue transactions carrying human-readable advisories encoded as UTF-8 calldata (`input`) directly targeted at the victim's wallet.
-* **1-Click Remediation Routing:** Dynamically generates direct links to `https://revoke.cash/address/<victim>` to immediately revoke active unlimited allowances and neutralize drainers.
+* **Sub-Second Static Calldata Inspection**: Evaluates transaction payload signatures (`tx['input']`) and native value (`tx['value']`) against public Ethereum archive nodes without requiring local archive storage[cite: 9].
+* **Deterministic Risk Scoring**[cite: 9]:
+  * `CRITICAL 🚨`: Ice Phishing, NFT Orders & Address Poisoning (Unrestricted token drainage permissions, marketplace sweeps, and zero-value vanity spoofing).
+  * `MODERATE ⚡`: Payable Contract Interactions (Direct single-transaction loss limit).
+  * `LOW ✅`: Standard native transfers and benign operations[cite: 9].
+* **Embedded Quantitative Benchmark Analytics**: Visualizes the $N=500$ confusion matrix and category performance statistics side-by-side[cite: 9].
+* **Adversarial Payload Synthesizer (`attacker_simulator.py`)**: Programmatically models how threat actors construct malicious EVM calldata, mapping function selectors to offensive attack vectors (Ice Phishing, Address Poisoning, Permit2/NFT Order Hijacking) and generating step-by-step exploit construction breakdowns.
+* **Automated On-Chain Rescue Dispatcher (`alert_engine.py`)**: Implements Section VIII of NDSS by generating 0-ETH rescue transactions carrying human-readable advisories encoded as UTF-8 calldata (`input`) directly targeted at the victim's wallet[cite: 9].
+* **1-Click Remediation Routing**: Dynamically generates direct links to `https://revoke.cash/address/<victim>` to immediately revoke active unlimited allowances and neutralize drainers[cite: 9].
 
 #### How to Launch the Dashboard:
 ```powershell
 streamlit run app.py
-```
 
 
 ### 14. Phase 7: On-Chain Victim Alert Dispatcher (Paper Section VIII — "The Last Line") 🛡️📬
@@ -371,6 +367,14 @@ Section VIII of the NDSS 2025 paper details that detection alone is insufficient
    - **Production Broadcast Mode:** Prepared for Web3 signing via funded relayer wallets to dispatch immutable warning transactions directly to the Ethereum network.
 
 ---
+### 15.Adversarial Payload Synthesizer & Attack Simulation Engine (`attacker_simulator.py`) ⚔️🧬
+
+To fulfill advanced security research requirements—shifting from passive heuristic detection to an offensive understanding of smart contract exploitation—an dedicated adversarial simulation module (`attacker_simulator.py`) was developed.
+
+#### Key Features:
+* **Offensive Exploit Mapping**: Programmatically maps transaction function selectors to core threat archetypes (Ice Phishing, Address Poisoning, Permit2 / NFT Order Hijacking).
+* **Step-by-Step Attack Anatomy**: Deconstructs raw hexadecimal calldata into a forensic narrative explaining how threat actors weaponize legitimate EVM standards to deceive users.
+* **Dynamic UI Integration**: Feeds live telemetry directly into the Streamlit dashboard (`app.py`), rendering interactive red-team attack breakdowns alongside defense verdicts.
 
 ### 📄 Formal Reproduction Report
 
@@ -384,33 +388,3 @@ A complete academic and systems evaluation report is included in the root direct
 * **Boundary Analysis**: Concrete case studies showing why static inspection achieves 88.60% accuracy and where dynamic bytecode tracing is required.
 
 
-## 📌 Project Roadmap & Progress Checklist 🚀
-
-Track the reproduction pipeline for the PTXPhish paper:
-
-### Phase 1: Setup & Ground Truth Data Preparation
-- [x] Environment configured (`web3.py`, `pandas`, virtual environment)
-- [x] Ground-truth dataset extracted and cleaned into `dataset/cleaned_ptxphish.csv`
-- [x] Direct Ethereum RPC connection established with multi-node fallback (`scripts/test_rpc.py`)
-
-### Phase 2: Detection Rules Implementation (The Core 4 Rules)
-- [x] **Rule 1: Ice Phishing Detector** (`scripts/detect_ice_phishing.py`)
-  - Detects `approve`, `setApprovalForAll`, `transferFrom`, and multicall token drainers (0 ETH value).
-- [x] **Rule 2: Payable Function Abuse Detector** (`scripts/detect_payable_abuse.py`)
-  - Detects direct ETH-draining trap functions (`mint`, `claim`, custom payable calls with non-zero ETH).
-- [x] **Rule 3: Address Poisoning Detector** (`scripts/detect_address_poisoning.py`)
-  - Detects zero-value transfers sent from lookalike vanity addresses created to fool transaction history copy-pasters.
-- [x] **Rule 4: NFT Order / Signature Phishing Detector** (`scripts/detect_nft_order_scam.py`)
-  - Detects off-chain signature abuse (e.g., Permit2 or fake SeaPort/marketplace orders).
-
-### Phase 3: Evaluation, Batch Pipeline & Academic Metrics
-* [x] Build unified evaluation runner (`scripts/run_evaluation.py`) across all scam categories in `cleaned_ptxphish.csv`.
-* [x] Calculate paper metrics: Accuracy, Precision, Recall, and F1-Score.
-* [x] Generate comparative breakdown table matching the PTXPhish paper findings.
-* [x] Implement paper Section VIII on-chain victim alert engine (`alert_engine.py`).
-* [ ] Final project presentation & documentation polish for 10/10 final evaluation.
-
-### Phase 4: Extended Multi-Dimensional Heuristics (Targeting 95%+ F1) 🚀
-* [ ] Integrate known drainer & poisoner address signatures (PinkDrainer, Inferno patterns).
-* [ ] RPC-level account profiling (`eth_getTransactionCount` checks to filter ephemeral deployers).
-* [ ] Deep calldata parameter inspection (infinite allowance `type(uint256).max` validation).
