@@ -353,6 +353,7 @@ In addition to offline batch evaluation scripts, an interactive web interface (`
 #### How to Launch the Dashboard:
 ```powershell
 streamlit run app.py
+```
 
 
 ### 14. Phase 7: On-Chain Victim Alert Dispatcher (Paper Section VIII — "The Last Line") 🛡️📬
