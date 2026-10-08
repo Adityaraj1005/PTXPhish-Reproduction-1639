@@ -386,6 +386,6 @@ A complete academic and systems evaluation report is included in the root direct
 * **Threat Mechanics**: Detailed technical breakdowns of Ice Phishing, NFT Order Scams, Address Poisoning, and Payable Function Scams.
 * **Script Architecture**: Comprehensive explanations of `scripts/run_evaluation.py`, `scripts/generate_metrics.py`, and `app.py`.
 * **Empirical Comparison ($N=500$)**: Side-by-side performance table evaluating lightweight static calldata analysis against full EVM state replay simulation.
-* **Boundary Analysis**: Concrete case studies showing why static inspection achieves 88.60% accuracy and where dynamic bytecode tracing is required.
+
 
 
