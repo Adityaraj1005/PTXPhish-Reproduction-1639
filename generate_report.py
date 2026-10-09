@@ -22,54 +22,54 @@ def generate_pdf_report(filename="report.pdf"):
     title_style = ParagraphStyle(
         'DocTitle',
         parent=styles['Heading1'],
-        fontSize=16,
-        leading=20,
+        fontSize=14,
+        leading=18,
         textColor=colors.HexColor('#0f172a'),
-        spaceAfter=6,
+        spaceAfter=4,
         alignment=1
     )
 
     subtitle_style = ParagraphStyle(
         'DocSubtitle',
         parent=styles['Normal'],
-        fontSize=10,
-        leading=14,
+        fontSize=9,
+        leading=13,
         textColor=colors.HexColor('#475569'),
-        spaceAfter=12,
+        spaceAfter=10,
         alignment=1
     )
 
     heading_style = ParagraphStyle(
         'SectionHeading',
         parent=styles['Heading2'],
-        fontSize=12,
-        leading=16,
+        fontSize=11,
+        leading=15,
         textColor=colors.HexColor('#1e293b'),
         spaceBefore=10,
-        spaceAfter=6
+        spaceAfter=4
     )
 
     body_style = ParagraphStyle(
         'BodyDark',
         parent=styles['Normal'],
-        fontSize=9,
-        leading=13,
+        fontSize=8.5,
+        leading=12,
         textColor=colors.HexColor('#334155'),
-        spaceAfter=6
+        spaceAfter=5
     )
 
     bullet_style = ParagraphStyle(
         'BulletText',
         parent=body_style,
-        leftIndent=15,
-        spaceAfter=4
+        leftIndent=12,
+        spaceAfter=3
     )
 
     table_cell_style = ParagraphStyle(
         'TableCell',
         parent=styles['Normal'],
         fontSize=8,
-        leading=11,
+        leading=10,
         textColor=colors.HexColor('#1e293b')
     )
 
@@ -77,7 +77,7 @@ def generate_pdf_report(filename="report.pdf"):
         'TableHeader',
         parent=styles['Normal'],
         fontSize=8,
-        leading=11,
+        leading=10,
         textColor=colors.white,
         fontName='Helvetica-Bold'
     )
@@ -85,37 +85,71 @@ def generate_pdf_report(filename="report.pdf"):
     story = []
 
     # Title & Metadata Header
-    story.append(Paragraph("ENGINEERING-GRADE REPRODUCTION AND ADVERSARIAL SIMULATION OF PAYLOAD-BASED TRANSACTION PHISHING (PTXPHISH) ON ETHEREUM", title_style))
-    story.append(Paragraph("<b>Author:</b> Adityaraj Shyamsundar Bhandari | <b>Roll No:</b> 2024UCP1639<br/><b>Institution:</b> Malaviya National Institute of Technology (MNIT), Jaipur (B.Tech CSE, CGPA: 8.48)", subtitle_style))
-    story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#cbd5e1'), spaceBefore=2, spaceAfter=10))
+    story.append(Paragraph("ENGINEERING-GRADE REPRODUCTION, HEURISTIC DETECTION CASCADE, AND ADVERSARIAL SIMULATION OF PAYLOAD-BASED TRANSACTION PHISHING (PTXPHISH) ON ETHEREUM", title_style))
+    story.append(Paragraph("<b>Student Researcher:</b> Adityaraj Shyamsundar Bhandari | <b>Roll No:</b> 2024UCP1639<br/><b>Institution:</b> Malaviya National Institute of Technology (MNIT), Jaipur (B.Tech Computer Science & Engineering, CGPA: 8.48)", subtitle_style))
+    story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#cbd5e1'), spaceBefore=2, spaceAfter=8))
 
-    # Section 1: Introduction & Research Rationale
-    story.append(Paragraph("1. Introduction & Research Rationale", heading_style))
+    # Section 1
+    story.append(Paragraph("1. Abstract & Executive Summary", heading_style))
     story.append(Paragraph(
-        "Traditional blockchain security literature historically focused on phishing websites, credential theft, or simple token transfer scams. However, with the maturation of Decentralized Finance (DeFi) on Ethereum, threat actors evolved into <b>Payload-based Transaction Phishing (PTXPhish)</b>. "
-        "We selected this research topic because PTXPhish represents a critical paradigm shift: victims interact with entirely legitimate, reputable smart contracts (such as Blur, Uniswap, or OpenSea), while malicious calldata parameters secretly subvert transaction semantics (e.g., setting marketplace fee parameters to 100% or executing zero-value address poisoning). Investigating this threat bridges theoretical blockchain security with practical defensive engineering.",
+        "With the rapid maturation of Decentralized Finance (DeFi) on Ethereum, threat actors have evolved beyond rudimentary frontend credential phishing into sophisticated <b>Payload-Based Transaction Phishing (PTXPhish)</b>. "
+        "Unlike traditional scams, PTXPhish tricks users into interacting with entirely legitimate, trusted smart contract protocols (such as Uniswap, Blur, or OpenSea), while maliciously crafted calldata parameters secretly subvert transaction semantics—such as setting marketplace fee parameters to 100% or executing zero-value address poisoning. "
+        "This project presents an engineering-grade reproduction and extension of the NDSS 2025 foundational study. We establish a multi-tier deterministic heuristic detection engine achieving an overall accuracy of <b>97.60%</b> and a Macro F1-score of <b>0.976</b>. "
+        "Furthermore, to satisfy rigorous academic review criteria requiring an 'attack-like' perspective, we developed an <b>Adversarial Payload Synthesizer (attacker_simulator.py)</b> that programmatically models how threat actors construct malicious EVM calldata. All findings are packaged into a production-grade Streamlit web application (app.py) featuring live archive node inspection and automated on-chain alert dispatching.",
         body_style
     ))
 
-    # Section 2: Original Research vs. Our Implementation
-    story.append(Paragraph("2. Original Researchers' Model vs. Our Implementation", heading_style))
+    # Section 2
+    story.append(Paragraph("2. Introduction, Background, & Research Rationale", heading_style))
     story.append(Paragraph(
-        "<b>Original Model (NDSS 2025 - Zhuo Chen et al., Zhejiang University):</b> Compiled the first ground-truth dataset of 5,000 phishing and 13,557 legitimate transactions, categorizing PTXPhish into Type I (Abusing Legitimate Contracts, e.g., Ice Phishing / NFT Order Hijacking) and Type II (Exploiting Phishing Contracts, e.g., Address Poisoning / Payable Traps) through an offline macro-scale measurement study.",
-        bullet_style
+        "<b>2.1 The Evolution of Web3 Threat Vectors:</b> The Ethereum blockchain operates via state-transition transactions initiated by Externally Owned Accounts (EOAs) interacting with Contract Accounts (CAs). Early blockchain security research focused primarily on phishing landing pages, fake wallet extensions, and simple direct-transfer fraud. However, as users grew accustomed to verifying contract addresses and interacting with decentralized applications (dApps), scammers adapted by moving the deception directly into the transaction calldata layer.",
+        body_style
     ))
     story.append(Paragraph(
-        "<b>Our Implementation Differences:</b> While the original research was purely offline and analytical, our project transforms their taxonomy into an interactive, production-grade security framework: (a) <i>Real-Time Archive Node Inspection (app.py)</i> querying live public archive RPC nodes sub-second; (b) <i>4-Tier Deterministic Heuristic Cascade</i> optimized for instant edge evaluation; (c) <i>Adversarial Payload Synthesizer (attacker_simulator.py)</i> modeling offensive calldata construction to satisfy rigorous evaluator review criteria; and (d) <i>1-Click Remediation Routing</i> generating Section VIII 0-ETH alerts alongside Revoke.cash deep-links.",
-        bullet_style
-    ))
-
-    # Section 3: Empirical Performance & 97.60% Accuracy Analysis
-    story.append(Paragraph("3. Empirical Performance Analysis & 97.60% Accuracy Rationale", heading_style))
-    story.append(Paragraph(
-        "Tested on an independent, balanced benchmark dataset (N = 500, with 125 samples across each threat class), our detection engine achieved an overall accuracy of <b>97.60%</b> and a Macro F1-Score of <b>0.976</b>.",
+        "<b>2.2 Why We Chose This Research Topic:</b> We selected PTXPhish as our core research focus because it represents a profound paradigm shift in cybercrime: the victim signs a transaction targeting a reputable, verified contract address, believing the operation is safe, while internal parameter manipulation executes asset expropriation. Investigating this threat allows us to bridge theoretical smart contract security with deployable defensive systems.",
         body_style
     ))
 
-    # Summary Table
+    # Section 3
+    story.append(Paragraph("3. Threat Model & Taxonomy of PTXPhish", heading_style))
+    story.append(Paragraph(
+        "Based on the foundational taxonomy established by Chen et al., PTXPhish is categorized into two primary strategies comprising eleven distinct sub-categories:",
+        body_style
+    ))
+    story.append(Paragraph("• <b>Strategy I: Abusing Legitimate Contracts:</b> Includes <i>Ice Phishing</i> (approval hijacking via `approve` or `setApprovalForAll`), <i>Permit2 / Off-Chain Signature Exploitation</i> (forging EIP-712 permits), and <i>NFT Marketplace Order Hijacking</i> (manipulating fee recipients to 100%).", bullet_style))
+    story.append(Paragraph("• <b>Strategy II: Exploiting Phishing Contracts:</b> Includes <i>Address Poisoning</i> (zero-value dust transfers using vanity address generation) and <i>Payable Function Scams</i> (malicious fallback execution).", bullet_style))
+
+    # Section 4
+    story.append(Paragraph("4. Comparative Analysis: Original NDSS 2025 Model vs. Our Implementation", heading_style))
+    story.append(Paragraph(
+        "While the original research was structured as an offline macro-scale measurement study over 300 days across historical blocks, our project transforms their theoretical taxonomy into an interactive, production-grade security framework. "
+        "Our implementation introduces sub-second archive node RPC querying, a 4-tier deterministic heuristic cascade, an offensive payload synthesizer, and 1-click remediation routing.",
+        body_style
+    ))
+
+    # Section 5 & 6
+    story.append(Paragraph("5. Dataset Construction & 4-Tier Heuristic Detection Cascade", heading_style))
+    story.append(Paragraph(
+        "To evaluate our engine, we constructed a balanced benchmark dataset comprising <b>N = 500 transactions</b> (125 samples across each primary threat class). "
+        "Our detection engine processes raw transaction input payloads and native value through a high-performance 4-tier rule cascade covering NFT marketplace validation, address poisoning filters, ice phishing detectors, and payable fallback analyzers.",
+        body_style
+    ))
+
+    # Section 7
+    story.append(Paragraph("6. Offensive Security Module: Adversarial Payload Synthesizer", heading_style))
+    story.append(Paragraph(
+        "To satisfy evaluator requirements for an offensive research perspective, we engineered <code>attacker_simulator.py</code>. "
+        "This module programmatically takes a function selector and threat category, then maps low-level hex to exploit archetypes, generates step-by-step payload construction narratives, and profiles victim asset exposure severity.",
+        body_style
+    ))
+
+    # Section 8 & 9
+    story.append(Paragraph("7. Quantitative Performance Evaluation & 97.60% Accuracy Analysis", heading_style))
+    story.append(Paragraph(
+        "Tested on our N=500 balanced benchmark, the system achieved an overall accuracy of <b>97.60%</b> and a Macro F1-score of <b>0.976</b>.",
+        body_style
+    ))
+
     table_data = [
         [Paragraph("Evaluation Metric", table_header_style), Paragraph("Score / Performance", table_header_style), Paragraph("Benchmark Scope", table_header_style)],
         [Paragraph("Overall Accuracy", table_cell_style), Paragraph("97.60%", table_cell_style), Paragraph("N = 500 Balanced Test Set", table_cell_style)],
@@ -123,37 +157,28 @@ def generate_pdf_report(filename="report.pdf"):
         [Paragraph("NFT Order Phishing F1", table_cell_style), Paragraph("1.00", table_cell_style), Paragraph("Deterministic Selector Match", table_cell_style)],
         [Paragraph("Address Poisoning F1", table_cell_style), Paragraph("0.96", table_cell_style), Paragraph("Zero-Value Heuristic Filter", table_cell_style)]
     ]
-    t = Table(table_data, colWidths=[150, 130, 240])
+    t = Table(table_data, colWidths=[150, 120, 234])
     t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e293b')),
         ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
         ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-        ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
-        ('TOPPADDING', (0, 0), (-1, -1), 4),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ('TOPPADDING', (0, 0), (-1, -1), 3),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#cbd5e1'))
     ]))
     story.append(t)
-    story.append(Spacer(1, 6))
+    story.append(Spacer(1, 4))
 
     story.append(Paragraph(
-        "<b>Scientific Rationale for the 2.40% Error Margin (12 / 500 misclassifications):</b><br/>"
-        "1. <i>Polymorphic Proxy Routing & Calldata Obfuscation:</i> Advanced scam contracts wrap malicious payloads inside multi-hop delegatecall proxies that occasionally obscure the primary function selector.<br/>"
-        "2. <i>Zero-Value Benign Interacting vs. Address Poisoning:</i> Certain legitimate smart contract pings execute zero-value transfers that share superficial signature similarities with address poisoning heuristics.<br/>"
-        "3. <i>Evolving Calldata Mutation:</i> Attackers dynamically mutate parameter padding to evade rigid rule boundaries—motivating our development of the `attacker_simulator.py` adversarial engine.",
+        "<b>Error Rationale (2.40% Margin / 12 misclassifications):</b> Caused by polymorphic proxy routing obscuring function selectors, zero-value benign interacting overlapping with address poisoning, and dynamic parameter padding mutations by advanced threat actors.",
         body_style
     ))
 
-    # Section 4: Adversarial Simulation Architecture
-    story.append(Paragraph("4. Adversarial Simulation & System Architecture", heading_style))
+    # Section 10
+    story.append(Paragraph("8. Active Remediation Protocol & Conclusion", heading_style))
     story.append(Paragraph(
-        "To address evaluator feedback requesting an 'attack-like' research perspective, our system integrates two runtime modules: (1) <b>attacker_simulator.py</b>, which programmatically maps selectors to offensive attack vectors and deconstructs payload construction steps; and (2) <b>app.py</b>, which renders side-by-side defense verdicts and adversarial forensic breakdowns during live presentations.",
-        body_style
-    ))
-
-    # Section 5: Conclusion
-    story.append(Paragraph("5. Conclusion", heading_style))
-    story.append(Paragraph(
-        "Our reproduction successfully operationalizes the theoretical findings of NDSS 2025 PTXPhish into an interactive, rigorous security analysis tool. By combining sub-second archive node inspection, deterministic multi-tier classification, and an adversarial payload simulator, this work provides a complete framework for detecting and analyzing EVM payload phishing.",
+        "<b>8.1 Active Remediation:</b> Implements Section VIII of NDSS by generating 0-ETH rescue transactions carrying UTF-8 warning advisories, alongside 1-click deep-linking to <code>Revoke.cash</code> for immediate allowance revocation.<br/>"
+        "<b>8.2 Conclusion:</b> This work successfully operationalizes the findings of NDSS 2025 PTXPhish into an interactive, rigorous security analysis framework, uniting sub-second archive inspection, deterministic classification, and adversarial simulation.",
         body_style
     ))
 
