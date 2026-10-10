@@ -238,3 +238,6 @@ with tab2:
     cm_path = os.path.join("results", "confusion_matrix_500.png")
     if os.path.exists(cm_path):
         st.image(cm_path, caption="Confusion Matrix (N=500, 125 samples per class)", use_container_width=True)
+
+import presign_ui
+presign_ui.render()
