@@ -180,6 +180,9 @@ with tab1:
         st.caption("This is a pattern match on the transaction data, not proof of fraud. "
                    "A LOW result means no suspicious pattern was recognised.")
 
+        if details["verdict"] == "Benign / Unknown Interaction":
+            st.info("Note: no attack pattern was recognised in this transaction. The panels below show an illustrative example of how the tool works, not a finding about this transaction.")
+
         # --- INTEGRATED ATTACK SIMULATION ANATOMY PANEL ---
         st.markdown("---")
         st.subheader("🕵️‍♂️ Adversarial Attack Anatomy & Simulation")
@@ -220,7 +223,7 @@ with tab1:
         # --------------------------------------------------
 
         st.markdown("---")
-        st.subheader("🚨 In-Chain Victim Alert Dispatcher (Paper Section VIII)")
+        st.subheader("🚨 In-Chain Victim Alert Dispatcher (Paper Section V-D)")
 
         victim_addr = details.get("From (Victim)", "0xVictimAddress")
         attacker_addr = details.get("Target Contract", "0xAttackerContract")
