@@ -547,3 +547,61 @@ A complete academic and systems evaluation report (20 pages) is included in the 
 - **Empirical Results (N = 500)**: Baseline (88.60%) versus upgraded cascade (98.00% / 97.60%), with an error-by-error table of what fixed what.
 - **Limitations & Future Work**: Heuristic ceiling, dataset label provenance concern, and planned improvements.
 - **Pre-Sign Checker**: how the "Should I sign this?" tool works, its risk rules table, tests and limits.
+
+
+
+
+### 🖥️ Dashboard Guide: What Each Section Does (`app.py`)
+
+Start the app with `streamlit run app.py`. The page has the following sections, from top to bottom.
+
+#### 1. Header
+The title and a one-line description. The tool reads the data inside an Ethereum transaction (the calldata) and applies fixed rules to decide whether it looks like a known phishing pattern.
+
+#### 2. Two tabs: Live Transaction Scanner and Empirical Benchmark
+- **Live Transaction Scanner** is the working tool (sections 3 to 8 below).
+- **Empirical Benchmark** shows our test results (section 10).
+
+#### 3. Transaction hash box and "Inspect Transaction" button
+- **What it does:** you paste the hash (unique ID) of any Ethereum transaction and press the button.
+- **How it works:** the app asks free public Ethereum nodes for the transaction. It tries 5 nodes in turn, so one slow node does not stop it. It reads the function selector (the first 4 bytes of the input data) and the ETH value, then runs our rule cascade.
+- **Why:** this is a lightweight version of the paper's detector. It needs no 2 TB archive node.
+
+#### 4. Verdict banner and four metrics
+- **Classification Result:** one of NFT Order Phishing, Address Poisoning, Ice Phishing, Payable Function Scam, or Benign / Unknown Interaction.
+- **Risk Level:** CRITICAL (ice phishing, NFT order, address poisoning), MODERATE (payable function), or LOW (no known pattern).
+- **Function Selector:** which function the transaction calls.
+- **ETH Value:** how much ETH was sent with it.
+- **From:** the sender address.
+
+#### 5. Raw details and caption
+The full result as JSON, plus a reminder that this is a pattern match, not proof of fraud. A LOW result means that no suspicious pattern was recognised, not that the transaction is proven safe.
+
+#### 6. Blue note for benign results
+If nothing suspicious is found, a note says the two panels below are an illustrative example of how the tool works, not a finding about this transaction.
+
+#### 7. Adversarial Attack Anatomy & Simulation
+- **What it does:** explains in plain text how an attacker would build this kind of transaction: the attack type, the risk for the victim, and the construction steps.
+- **How it works:** `attacker_simulator.py` maps the verdict and selector to prepared explanations. Nothing is executed.
+- **Why:** it shows the attacker's side next to the defence. It is educational and is not part of the detection.
+
+#### 8. In-Chain Victim Alert Dispatcher (Paper Section V-D)
+- **What it does:** prepares a warning message for the victim as a 0-ETH transaction, as the paper's authors did when they sent 2,539 on-chain alerts.
+- **How it works:** `alert_engine.py` encodes the advisory text as hex, sets the value to 0 ETH and a gas limit of about 25,000. **Dispatch Simulated Alert** only displays the prepared transaction. **Nothing is sent to the blockchain.**
+- **Open Revoke.cash** opens the site where the victim can cancel token approvals for their wallet.
+- **Why:** the paper argues that detection alone is not enough, because victims also need a warning.
+
+#### 9. Should I sign this? (Pre-Sign Checker)
+Works fully offline. It never contacts the blockchain.
+- **Check a transaction tab:** paste the hex data and ETH value shown in your wallet pop-up (the "To address" is optional). You get a risk level and a plain-English explanation. The **example dropdown** fills in ready test cases, such as an unlimited approval or a zero-value transfer.
+- **Compare two addresses tab:** checks whether two addresses share the same first 4 and last 4 characters, which is the address-poisoning trick, and shows which characters differ.
+- **Why:** the scanner works on a transaction that already exists. This tool helps *before* you press Confirm.
+
+#### 10. Empirical Benchmark tab
+Shows the results of our 500-transaction test: 98.00% accuracy and macro F1 0.980 on seed 42 (97.60% and 0.976 on seed 7), plus the confusion matrix image.
+
+#### Limits to keep in mind
+- The scanner is on demand, not a real-time monitor.
+- Results are pattern matches, not proof.
+- The alert dispatcher runs in simulation mode only.
+- The benchmark separates the four phishing classes. It was not run on normal transactions.
